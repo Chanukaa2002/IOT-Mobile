@@ -1,16 +1,34 @@
-# cw_app
+# Smart Meal Box - Mobile Application
 
-A new Flutter project.
+![App Screenshot](https://via.placeholder.com/300x600?text=App+Preview) <!-- Replace with your app screenshots -->
 
-## Getting Started
+## 📱 Mobile Application for IoT Smart Meal Box
 
-This project is a starting point for a Flutter application.
+The companion mobile app for the Smart Meal Box system that visualizes dietary data, tracks nutrition goals, and provides real-time monitoring of food consumption.
 
-A few resources to get you started if this is your first Flutter project:
+## ✨ Key Features
+- **Real-time Dashboard**
+  - Live weight measurements from meal box
+  - Nutritional breakdown (calories, proteins, carbs, fats)
+  - Temperature monitoring
+- **Meal Tracking**
+  - Automatic meal logging
+  - Food type selection (user input)
+  - Barcode scanner for packaged foods (future enhancement)
+- **Data Visualization**
+  - Daily/weekly intake charts
+  - Progress toward custom goals
+- **Smart Notifications**
+  - Goal achievement alerts
+  - Temperature warnings
+  - Meal reminders
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+## 🛠️ Technical Stack
+| Component | Technology |
+|-----------|------------|
+| Frontend | Flutter (Dart) |
+| Backend | Firebase/Firestore |
+| IoT Communication | MQTT/HTTP |
+| Charts Library | fl_chart |
+| State Management | Provider/Riverpod |
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
