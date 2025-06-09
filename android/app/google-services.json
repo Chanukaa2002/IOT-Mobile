@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "752972764270",
+    "firebase_url": "https://mobile-cw-4f53c-default-rtdb.firebaseio.com",
+    "project_id": "mobile-cw-4f53c",
+    "storage_bucket": "mobile-cw-4f53c.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:752972764270:android:dd240393965d2192b2c27f",
+        "android_client_info": {
+          "package_name": "com.example.cw_app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "752972764270-fdosf85m071075efg2kt8075jeq251ek.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDgQ-wBbbBFr8EO2cFXZahDYCd9HwK83gE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "752972764270-fdosf85m071075efg2kt8075jeq251ek.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "752972764270-mpgs0fu5l5kkk9tgv4dc0ave39blhp62.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.cwApp"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
