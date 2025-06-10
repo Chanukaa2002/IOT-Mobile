@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 //! testing packages
 // import 'package:cw_app/features/auth/pages/login_page.dart';
 //  import 'package:cw_app/features/auth/pages/signup_page.dart';
+import 'package:cw_app/features/client/pages/home_page.dart';
 
 void main() {
   runApp(const MyApp());
@@ -16,6 +17,9 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(debugShowCheckedModeBanner: false, home: Home());
+    return const MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: HomePage(),
+    );
   }
 }
