@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:percent_indicator/percent_indicator.dart';
-// Adjust this import path to point to your AppColors file
+// Adjust these import paths if they are different in your project
+import 'package:cw_app/core/utils/app_colors.dart';
+import 'package:cw_app/features/client/pages/goal_setting_page.dart';
 import 'package:cw_app/core/utils/app_colors.dart';
 
+// Converted back to a StatefulWidget to handle future dynamic data
 class GoalsPage extends StatefulWidget {
   const GoalsPage({super.key});
 
@@ -11,14 +14,22 @@ class GoalsPage extends StatefulWidget {
 }
 
 class _GoalsPageState extends State<GoalsPage> {
-  // Set the initial index to 1 for the "Goals" tab
+  // You can add state variables here in the future for your data
+  // For example:
+  // Map<String, dynamic>? _goalData;
+  // bool _isLoading = true;
 
+  // @override
+  // void initState() {
+  //   super.initState();
+  //   // _fetchGoalData(); // You would call your data fetching method here
+  // }
 
   @override
   Widget build(BuildContext context) {
+    // The build method is now inside the _GoalsPageState class
     return Scaffold(
       backgroundColor: Colors.grey[100],
-      // The AppBar is identical to the HomePage
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
@@ -59,42 +70,16 @@ class _GoalsPageState extends State<GoalsPage> {
               const SizedBox(height: 16),
               _buildNutrientGrid(),
               const SizedBox(height: 16),
+              // The build method now has access to 'context' directly
               _buildDailyGoalProgressCard(),
             ],
           ),
         ),
       ),
-      // The "sticky" bottom navigation bar
-      // bottomNavigationBar: BottomNavigationBar(
-      //   items: const <BottomNavigationBarItem>[
-      //     BottomNavigationBarItem(
-      //       icon: Icon(Icons.home_outlined),
-      //       label: 'Home',
-      //     ),
-      //     BottomNavigationBarItem(
-      //       icon: Icon(Icons.track_changes),
-      //       label: 'Goals',
-      //     ),
-      //     BottomNavigationBarItem(
-      //       icon: Icon(Icons.history_outlined),
-      //       label: 'History',
-      //     ),
-      //     BottomNavigationBarItem(
-      //       icon: Icon(Icons.inventory_2_outlined),
-      //       label: 'Meal Box',
-      //     ),
-      //   ],
-      //   currentIndex: _selectedIndex,
-      //   selectedItemColor: AppColors.primaryBlue,
-      //   unselectedItemColor: Colors.grey[600],
-      //   onTap: _onItemTapped,
-      //   type: BottomNavigationBarType.fixed,
-      //   showUnselectedLabels: true,
-      // ),
     );
   }
 
-  // --- Helper methods to build each section ---
+  // --- Helper methods are now part of the _GoalsPageState class ---
 
   Widget _buildTopStatusCard() {
     return ClipRRect(
@@ -103,7 +88,6 @@ class _GoalsPageState extends State<GoalsPage> {
         height: 200,
         decoration: const BoxDecoration(
           image: DecorationImage(
-            // Make sure you have this image in core/assets/
             image: AssetImage('lib/core/assets/frosty_background.jpg'),
             fit: BoxFit.cover,
           ),
@@ -115,7 +99,7 @@ class _GoalsPageState extends State<GoalsPage> {
               Text(
                 "450 grams",
                 style: TextStyle(
-                  color: AppColors.primaryBlue,
+                  color: AppColors.brightBlue,
                   fontSize: 52,
                   fontWeight: FontWeight.bold,
                   shadows: [Shadow(blurRadius: 10.0, color: Colors.black45)],
@@ -125,12 +109,12 @@ class _GoalsPageState extends State<GoalsPage> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.thermostat, color: Colors.white, size: 20),
+                  Icon(Icons.thermostat, color: Colors.redAccent, size: 20),
                   SizedBox(width: 4),
                   Text(
                     "25°C, Optimal",
                     style: TextStyle(
-                      color: Colors.white,
+                      color: AppColors.brightBlue,
                       fontSize: 16,
                       fontWeight: FontWeight.w500,
                       shadows: [Shadow(blurRadius: 8.0, color: Colors.black45)],
@@ -146,16 +130,13 @@ class _GoalsPageState extends State<GoalsPage> {
   }
 
   Widget _buildNutrientGrid() {
-    // Using GridView.count to create a 2x2 grid automatically
     return GridView.count(
       crossAxisCount: 2,
-      shrinkWrap:
-          true, // Important to use GridView inside a SingleChildScrollView
-      physics:
-          const NeverScrollableScrollPhysics(), // Disable GridView's own scrolling
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
       crossAxisSpacing: 16,
       mainAxisSpacing: 16,
-      childAspectRatio: 1.1, // Adjust ratio to make cards look good
+      childAspectRatio: 1.1,
       children: [
         _NutrientCard(
           icon: Icons.local_fire_department_outlined,
@@ -243,7 +224,14 @@ class _GoalsPageState extends State<GoalsPage> {
           ),
           const SizedBox(height: 20),
           OutlinedButton.icon(
-            onPressed: () {},
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const GoalSettingsPage(),
+                ),
+              );
+            },
             icon: const Icon(Icons.settings_outlined),
             label: const Text("Adjust Goals"),
             style: OutlinedButton.styleFrom(
@@ -261,7 +249,7 @@ class _GoalsPageState extends State<GoalsPage> {
   }
 }
 
-// --- Custom sub-widgets for cards to avoid repetition ---
+// --- Custom sub-widgets (These can remain stateless) ---
 
 class _NutrientCard extends StatelessWidget {
   final IconData icon;
@@ -281,6 +269,7 @@ class _NutrientCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // ... code for this widget is unchanged ...
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -342,6 +331,7 @@ class _Legend extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // ... code for this widget is unchanged ...
     return Row(
       children: [
         Container(

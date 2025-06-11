@@ -39,10 +39,19 @@ class _NavWidgetState extends State<NavWidget> {
       // The BottomNavigationBar is defined ONCE here
       bottomNavigationBar: BottomNavigationBar(
         items: const <BottomNavigationBarItem>[
-          BottomNavigationBarItem(icon: Icon(Icons.home_outlined), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.track_changes), label: 'Goals'),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home_outlined),
+            label: 'Home',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.track_changes),
+            label: 'Goals',
+          ),
           BottomNavigationBarItem(icon: Icon(Icons.history), label: 'History'),
-          BottomNavigationBarItem(icon: Icon(Icons.inventory_2), label: 'Meal Box'),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.inventory_2),
+            label: 'Meal Box',
+          ),
         ],
         currentIndex: _selectedIndex,
         selectedItemColor: AppColors.primaryBlue,
