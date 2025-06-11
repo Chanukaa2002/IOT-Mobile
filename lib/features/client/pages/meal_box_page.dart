@@ -92,7 +92,7 @@ class _MealBoxPageState extends State<MealBoxPage> {
             label: 'History',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.inventory_2),
+            icon: Icon(Icons.inventory_2_outlined),
             label: 'Meal Box',
           ),
         ],
