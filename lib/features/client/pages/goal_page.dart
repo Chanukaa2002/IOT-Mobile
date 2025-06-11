@@ -12,14 +12,7 @@ class GoalsPage extends StatefulWidget {
 
 class _GoalsPageState extends State<GoalsPage> {
   // Set the initial index to 1 for the "Goals" tab
-  int _selectedIndex = 1;
 
-  void _onItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-      // TODO: Add navigation logic to switch pages
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -72,32 +65,32 @@ class _GoalsPageState extends State<GoalsPage> {
         ),
       ),
       // The "sticky" bottom navigation bar
-      bottomNavigationBar: BottomNavigationBar(
-        items: const <BottomNavigationBarItem>[
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home_outlined),
-            label: 'Home',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.track_changes),
-            label: 'Goals',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.history_outlined),
-            label: 'History',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.inventory_2_outlined),
-            label: 'Meal Box',
-          ),
-        ],
-        currentIndex: _selectedIndex,
-        selectedItemColor: AppColors.primaryBlue,
-        unselectedItemColor: Colors.grey[600],
-        onTap: _onItemTapped,
-        type: BottomNavigationBarType.fixed,
-        showUnselectedLabels: true,
-      ),
+      // bottomNavigationBar: BottomNavigationBar(
+      //   items: const <BottomNavigationBarItem>[
+      //     BottomNavigationBarItem(
+      //       icon: Icon(Icons.home_outlined),
+      //       label: 'Home',
+      //     ),
+      //     BottomNavigationBarItem(
+      //       icon: Icon(Icons.track_changes),
+      //       label: 'Goals',
+      //     ),
+      //     BottomNavigationBarItem(
+      //       icon: Icon(Icons.history_outlined),
+      //       label: 'History',
+      //     ),
+      //     BottomNavigationBarItem(
+      //       icon: Icon(Icons.inventory_2_outlined),
+      //       label: 'Meal Box',
+      //     ),
+      //   ],
+      //   currentIndex: _selectedIndex,
+      //   selectedItemColor: AppColors.primaryBlue,
+      //   unselectedItemColor: Colors.grey[600],
+      //   onTap: _onItemTapped,
+      //   type: BottomNavigationBarType.fixed,
+      //   showUnselectedLabels: true,
+      // ),
     );
   }
 

@@ -11,13 +11,7 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  int _selectedIndex = 0; // State for the selected tab in the bottom nav bar
 
-  void _onItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -75,24 +69,24 @@ class _HomePageState extends State<HomePage> {
         ),
       ),
       // The "sticky" bottom navigation bar
-      bottomNavigationBar: BottomNavigationBar(
-        items: const <BottomNavigationBarItem>[
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.track_changes), label: 'Goals'),
-          BottomNavigationBarItem(icon: Icon(Icons.history), label: 'History'),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.inventory_2_outlined),
-            label: 'Meal Box',
-          ),
-        ],
-        currentIndex: _selectedIndex,
-        selectedItemColor: AppColors.primaryBlue,
-        unselectedItemColor: Colors.grey[600],
-        onTap: _onItemTapped,
-        type:
-            BottomNavigationBarType.fixed, // Ensures labels are always visible
-        showUnselectedLabels: true,
-      ),
+      // bottomNavigationBar: BottomNavigationBar(
+      //   items: const <BottomNavigationBarItem>[
+      //     BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
+      //     BottomNavigationBarItem(icon: Icon(Icons.track_changes), label: 'Goals'),
+      //     BottomNavigationBarItem(icon: Icon(Icons.history), label: 'History'),
+      //     BottomNavigationBarItem(
+      //       icon: Icon(Icons.inventory_2_outlined),
+      //       label: 'Meal Box',
+      //     ),
+      //   ],
+      //   currentIndex: _selectedIndex,
+      //   selectedItemColor: AppColors.primaryBlue,
+      //   unselectedItemColor: Colors.grey[600],
+      //   onTap: _onItemTapped,
+      //   type:
+      //       BottomNavigationBarType.fixed, // Ensures labels are always visible
+      //   showUnselectedLabels: true,
+      // ),
     );
   }
 

@@ -15,7 +15,7 @@ class HistoryPage extends StatefulWidget {
 }
 
 class _HistoryPageState extends State<HistoryPage> {
-  int _selectedIndex = 2; // Set to 2 for the "History" tab
+ // Set to 2 for the "History" tab
 
   // State for the toggle buttons
   TimePeriod _weightTrendPeriod = TimePeriod.weekly;
@@ -69,20 +69,20 @@ class _HistoryPageState extends State<HistoryPage> {
           ),
         ),
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        items: const <BottomNavigationBarItem>[
-          BottomNavigationBarItem(icon: Icon(Icons.home_outlined), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.track_changes_outlined), label: 'Goals'),
-          BottomNavigationBarItem(icon: Icon(Icons.history), label: 'History'),
-          BottomNavigationBarItem(icon: Icon(Icons.inventory_2_outlined), label: 'Meal Box'),
-        ],
-        currentIndex: _selectedIndex,
-        selectedItemColor: AppColors.primaryBlue,
-        unselectedItemColor: Colors.grey[600],
-        onTap: (index) => setState(() => _selectedIndex = index),
-        type: BottomNavigationBarType.fixed,
-        showUnselectedLabels: true,
-      ),
+      // bottomNavigationBar: BottomNavigationBar(
+      //   items: const <BottomNavigationBarItem>[
+      //     BottomNavigationBarItem(icon: Icon(Icons.home_outlined), label: 'Home'),
+      //     BottomNavigationBarItem(icon: Icon(Icons.track_changes_outlined), label: 'Goals'),
+      //     BottomNavigationBarItem(icon: Icon(Icons.history), label: 'History'),
+      //     BottomNavigationBarItem(icon: Icon(Icons.inventory_2_outlined), label: 'Meal Box'),
+      //   ],
+      //   currentIndex: _selectedIndex,
+      //   selectedItemColor: AppColors.primaryBlue,
+      //   unselectedItemColor: Colors.grey[600],
+      //   onTap: (index) => setState(() => _selectedIndex = index),
+      //   type: BottomNavigationBarType.fixed,
+      //   showUnselectedLabels: true,
+      // ),
     );
   }
 

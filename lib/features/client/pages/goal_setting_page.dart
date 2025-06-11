@@ -12,7 +12,6 @@ class GoalSettingsPage extends StatefulWidget {
 
 class _GoalSettingsPageState extends State<GoalSettingsPage> {
   // State for the selected tab in the bottom nav bar
-  int _selectedIndex = 1;
 
   // State variables for each goal
   int _weightGoal = 75;
@@ -127,20 +126,20 @@ class _GoalSettingsPageState extends State<GoalSettingsPage> {
         ),
       ),
       // The "sticky" bottom navigation bar
-       bottomNavigationBar: BottomNavigationBar(
-        items: const <BottomNavigationBarItem>[
-          BottomNavigationBarItem(icon: Icon(Icons.home_outlined), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.track_changes), label: 'Goals'),
-          BottomNavigationBarItem(icon: Icon(Icons.history_outlined), label: 'History'),
-          BottomNavigationBarItem(icon: Icon(Icons.inventory_2_outlined), label: 'Meal Box'),
-        ],
-        currentIndex: _selectedIndex, // Set to 1 for Goals
-        selectedItemColor: AppColors.primaryBlue,
-        unselectedItemColor: Colors.grey[600],
-        onTap: (index) => setState(() => _selectedIndex = index),
-        type: BottomNavigationBarType.fixed,
-        showUnselectedLabels: true,
-      ),
+      //  bottomNavigationBar: BottomNavigationBar(
+      //   items: const <BottomNavigationBarItem>[
+      //     BottomNavigationBarItem(icon: Icon(Icons.home_outlined), label: 'Home'),
+      //     BottomNavigationBarItem(icon: Icon(Icons.track_changes), label: 'Goals'),
+      //     BottomNavigationBarItem(icon: Icon(Icons.history_outlined), label: 'History'),
+      //     BottomNavigationBarItem(icon: Icon(Icons.inventory_2_outlined), label: 'Meal Box'),
+      //   ],
+      //   currentIndex: _selectedIndex, // Set to 1 for Goals
+      //   selectedItemColor: AppColors.primaryBlue,
+      //   unselectedItemColor: Colors.grey[600],
+      //   onTap: (index) => setState(() => _selectedIndex = index),
+      //   type: BottomNavigationBarType.fixed,
+      //   showUnselectedLabels: true,
+      // ),
     );
   }
 
