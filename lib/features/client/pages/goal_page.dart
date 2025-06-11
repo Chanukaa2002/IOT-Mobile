@@ -3,7 +3,6 @@ import 'package:percent_indicator/percent_indicator.dart';
 // Adjust these import paths if they are different in your project
 import 'package:cw_app/core/utils/app_colors.dart';
 import 'package:cw_app/features/client/pages/goal_setting_page.dart';
-import 'package:cw_app/core/utils/app_colors.dart';
 
 // Converted back to a StatefulWidget to handle future dynamic data
 class GoalsPage extends StatefulWidget {

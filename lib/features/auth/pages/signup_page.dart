@@ -1,6 +1,10 @@
+import 'dart:async';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-// Adjust this import path to point to your AppColors file
 import 'package:cw_app/core/utils/app_colors.dart';
+import 'package:cw_app/features/auth/services/auth_service.dart';
+import 'package:cw_app/features/client/widget/nav_widget.dart';
+import 'package:cw_app/features/auth/pages/login_page.dart';
 
 class SignUpPage extends StatefulWidget {
   const SignUpPage({super.key});
@@ -10,61 +14,157 @@ class SignUpPage extends StatefulWidget {
 }
 
 class _SignUpPageState extends State<SignUpPage> {
-  // State variable to toggle password visibility
   bool _isPasswordObscured = true;
+  bool _isLoading = false;
+
+  final AuthService _authService = AuthService();
+  late TapGestureRecognizer _signInRecognizer;
+
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _weightController = TextEditingController();
+  final TextEditingController _heightController = TextEditingController();
+  final TextEditingController _ageController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _signInRecognizer =
+        TapGestureRecognizer()
+          ..onTap = () {
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(builder: (context) => const LoginPage()),
+            );
+          };
+  }
+
+  @override
+  void dispose() {
+    // Dispose all controllers and the recognizer to prevent memory leaks
+    _nameController.dispose();
+    _emailController.dispose();
+    _passwordController.dispose();
+    _weightController.dispose();
+    _heightController.dispose();
+    _ageController.dispose();
+    _signInRecognizer.dispose();
+    super.dispose();
+  }
+
+  void _handleSignUp() async {
+    // Basic validation
+    if (_nameController.text.isEmpty ||
+        _emailController.text.isEmpty ||
+        _passwordController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Name, Email, and Password cannot be empty."),
+        ),
+      );
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final user = await _authService
+          .signUpWithEmailAndPassword(
+            email: _emailController.text.trim(),
+            password: _passwordController.text.trim(),
+            name: _nameController.text.trim(),
+            weight: int.tryParse(_weightController.text.trim()) ?? 0,
+            height: int.tryParse(_heightController.text.trim()) ?? 0,
+            age: int.tryParse(_ageController.text.trim()) ?? 0,
+          )
+          .timeout(
+            const Duration(seconds: 45),
+          );
+
+      if (user != null) {
+        if (mounted) {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (context) => const NavWidget()),
+          );
+        }
+      }
+    } on TimeoutException catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              "Connection timed out. Please check your internet and try again.",
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("An error occurred: ${e.toString()}")),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      // Use SingleChildScrollView to prevent overflow on smaller screens
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Top spacing - Further reduced
               const SizedBox(height: 40),
 
-              // --- FORM FIELDS ---
               _buildTextField(
                 label: "Name",
                 hint: "Enter name",
+                controller: _nameController,
                 keyboardType: TextInputType.name,
               ),
               _buildTextField(
                 label: "Email",
                 hint: "Enter email",
+                controller: _emailController,
                 keyboardType: TextInputType.emailAddress,
               ),
               _buildPasswordTextField(),
               _buildTextField(
                 label: "Weight (Kg)",
                 hint: "Enter weight",
+                controller: _weightController,
                 keyboardType: TextInputType.number,
               ),
               _buildTextField(
                 label: "Height (cm)",
                 hint: "Enter height",
+                controller: _heightController,
                 keyboardType: TextInputType.number,
               ),
               _buildTextField(
                 label: "Age",
                 hint: "Enter age",
+                controller: _ageController,
                 keyboardType: TextInputType.number,
               ),
 
-              // Spacing before button - Further reduced
               const SizedBox(height: 24),
 
-              // Sign Up Button
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: () {
-                    // TODO: Handle sign up logic
-                  },
+                  onPressed: _isLoading ? null : _handleSignUp,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primaryBlue,
                     padding: const EdgeInsets.symmetric(vertical: 16),
@@ -72,20 +172,28 @@ class _SignUpPageState extends State<SignUpPage> {
                       borderRadius: BorderRadius.circular(50.0),
                     ),
                   ),
-                  child: const Text(
-                    "Sign up",
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
+                  child:
+                      _isLoading
+                          ? const SizedBox(
+                            height: 24,
+                            width: 24,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 3,
+                            ),
+                          )
+                          : const Text(
+                            "Sign up",
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
                 ),
               ),
-              // Spacing after button - Further reduced
-              const SizedBox(height: 20),
 
-              // "OR SIGNUP WITH" Divider
+              const SizedBox(height: 20),
               const Center(
                 child: Text(
                   "OR SIGNUP WITH",
@@ -96,8 +204,6 @@ class _SignUpPageState extends State<SignUpPage> {
                 ),
               ),
               const SizedBox(height: 16),
-
-              // Google Login Button
               Center(
                 child: OutlinedButton(
                   onPressed: () {
@@ -111,11 +217,7 @@ class _SignUpPageState extends State<SignUpPage> {
                   child: Image.asset('lib/core/assets/google.png', height: 28),
                 ),
               ),
-
-              // Spacing before bottom text - Further reduced
               const SizedBox(height: 20),
-
-              // "Already have an account?" Text
               Center(
                 child: RichText(
                   text: TextSpan(
@@ -128,9 +230,7 @@ class _SignUpPageState extends State<SignUpPage> {
                           color: AppColors.primaryBlue,
                           fontWeight: FontWeight.bold,
                         ),
-                        // recognizer: TapGestureRecognizer()..onTap = () {
-                        //    TODO: Navigate back to Sign In page
-                        // },
+                        recognizer: _signInRecognizer,
                       ),
                     ],
                   ),
@@ -144,11 +244,11 @@ class _SignUpPageState extends State<SignUpPage> {
     );
   }
 
-  // Helper method to build a standard text field to reduce code repetition
   Widget _buildTextField({
     required String label,
     required String hint,
     required TextInputType keyboardType,
+    required TextEditingController controller,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -161,8 +261,9 @@ class _SignUpPageState extends State<SignUpPage> {
             color: Colors.black87,
           ),
         ),
-        const SizedBox(height: 5), // Further reduced
+        const SizedBox(height: 5),
         TextField(
+          controller: controller,
           keyboardType: keyboardType,
           decoration: InputDecoration(
             hintText: hint,
@@ -172,20 +273,17 @@ class _SignUpPageState extends State<SignUpPage> {
               borderRadius: BorderRadius.circular(12.0),
               borderSide: BorderSide.none,
             ),
-            // Content padding - Further reduced to make field shorter
             contentPadding: const EdgeInsets.symmetric(
               vertical: 12,
               horizontal: 16,
             ),
           ),
         ),
-        // Spacing after field - Further reduced
         const SizedBox(height: 12),
       ],
     );
   }
 
-  // Helper method specifically for the password field
   Widget _buildPasswordTextField() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -198,8 +296,9 @@ class _SignUpPageState extends State<SignUpPage> {
             color: Colors.black87,
           ),
         ),
-        const SizedBox(height: 5), // Further reduced
+        const SizedBox(height: 5),
         TextField(
+          controller: _passwordController,
           obscureText: _isPasswordObscured,
           decoration: InputDecoration(
             hintText: "Enter password",
@@ -209,7 +308,6 @@ class _SignUpPageState extends State<SignUpPage> {
               borderRadius: BorderRadius.circular(12.0),
               borderSide: BorderSide.none,
             ),
-            // Content padding - Further reduced to make field shorter
             contentPadding: const EdgeInsets.symmetric(
               vertical: 12,
               horizontal: 16,
@@ -229,7 +327,6 @@ class _SignUpPageState extends State<SignUpPage> {
             ),
           ),
         ),
-        // Spacing after field - Further reduced
         const SizedBox(height: 12),
       ],
     );
