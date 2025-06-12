@@ -1,7 +1,11 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:percent_indicator/percent_indicator.dart';
-// Adjust this import path to point to your AppColors file
+import 'package:firebase_auth/firebase_auth.dart';
+
+// Your app's custom files
 import 'package:cw_app/core/utils/app_colors.dart';
+import 'package:cw_app/features/client/service/firestore_service.dart';
 
 class GoalSettingsPage extends StatefulWidget {
   const GoalSettingsPage({super.key});
@@ -11,14 +15,121 @@ class GoalSettingsPage extends StatefulWidget {
 }
 
 class _GoalSettingsPageState extends State<GoalSettingsPage> {
-  // State for the selected tab in the bottom nav bar
+  final FirestoreService _firestoreService = FirestoreService();
+  final User? currentUser = FirebaseAuth.instance.currentUser;
+  bool _isLoading = true;
+  final Map<String, TextEditingController> _controllers = {
+    'weight': TextEditingController(text: '75000'),
+    'calories': TextEditingController(text: '2000'),
+    'carbohydrates': TextEditingController(text: '250'),
+    'proteins': TextEditingController(text: '100'),
+    'fats': TextEditingController(text: '70'),
+  };
 
-  // State variables for each goal
-  int _weightGoal = 75;
-  int _calorieGoal = 2000;
-  int _carbsGoal = 250;
-  int _proteinsGoal = 100;
-  int _fatsGoal = 70;
+  @override
+  void initState() {
+    super.initState();
+    _fetchAndSetCurrentUserGoals();
+  }
+
+  Future<void> _fetchAndSetCurrentUserGoals() async {
+    if (currentUser == null) {
+      setState(() => _isLoading = false);
+      return;
+    }
+
+    try {
+      final goalsSnapshot =
+          await _firestoreService.getGoalsStream(currentUser!.uid).first;
+      if (goalsSnapshot.docs.isNotEmpty && mounted) {
+        final goals = {
+          for (var doc in goalsSnapshot.docs) doc.id: doc.data() as Map,
+        };
+
+        _controllers['weight']?.text =
+            (goals['weight']?['target'] ?? 75000).toString();
+        _controllers['calories']?.text =
+            (goals['calories']?['target'] ?? 2000).toString();
+        _controllers['carbohydrates']?.text =
+            (goals['carbohydrates']?['target'] ?? 250).toString();
+        _controllers['proteins']?.text =
+            (goals['proteins']?['target'] ?? 100).toString();
+        _controllers['fats']?.text =
+            (goals['fats']?['target'] ?? 70).toString();
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Could not load saved goals: $e"),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      // Hide the loading spinner once fetching is done
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _controllers.forEach((key, controller) => controller.dispose());
+    super.dispose();
+  }
+
+  void _handleSaveGoals() async {
+    if (currentUser == null) return;
+    setState(() => _isLoading = true);
+
+    try {
+      final Map<String, int> goalsData = {
+        'weight': int.tryParse(_controllers['weight']!.text) ?? 0,
+        'calories': int.tryParse(_controllers['calories']!.text) ?? 0,
+        'carbohydrates': int.tryParse(_controllers['carbohydrates']!.text) ?? 0,
+        'proteins': int.tryParse(_controllers['proteins']!.text) ?? 0,
+        'fats': int.tryParse(_controllers['fats']!.text) ?? 0,
+      };
+
+      await _firestoreService
+          .saveUserGoals(currentUser!.uid, goalsData)
+          .timeout(const Duration(seconds: 20));
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Goals saved successfully!"),
+            backgroundColor: Colors.green,
+          ),
+        );
+        Navigator.of(context).pop(); // Go back to GoalsPage on success
+      }
+    } on TimeoutException catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Connection timed out."),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Failed to save goals: $e"),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -29,129 +140,121 @@ class _GoalSettingsPageState extends State<GoalSettingsPage> {
         elevation: 0,
         leading: IconButton(
           icon: Icon(Icons.arrow_back, color: Colors.grey[800]),
-          onPressed: () {
-            // TODO: Handle navigation back
-          },
+          onPressed: () => Navigator.of(context).pop(),
         ),
         title: Text(
           'Daily Goal Settings',
-          style: TextStyle(color: Colors.grey[800], fontWeight: FontWeight.bold),
+          style: TextStyle(
+            color: Colors.grey[800],
+            fontWeight: FontWeight.bold,
+          ),
         ),
         centerTitle: true,
       ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 16),
-              const Text(
-                'Set Your Daily Nutrition Goals',
-                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                'Customize your daily targets for weight, calories, and macronutrients to align with your health journey.',
-                style: TextStyle(color: Colors.grey, fontSize: 15),
-              ),
-              const SizedBox(height: 24),
-              
-              // Reusable card for each goal setting
-              _buildGoalSettingCard(
-                icon: Icons.monitor_weight_outlined,
-                title: 'Weight Goal',
-                value: _weightGoal,
-                unit: 'kg',
-                onDecrement: () => setState(() => _weightGoal--),
-                onIncrement: () => setState(() => _weightGoal++),
-                percent: 0.5, // Example percentage
-              ),
-              _buildGoalSettingCard(
-                icon: Icons.local_fire_department_outlined,
-                title: 'Calorie Goal',
-                value: _calorieGoal,
-                unit: 'kcal',
-                onDecrement: () => setState(() => _calorieGoal -= 50),
-                onIncrement: () => setState(() => _calorieGoal += 50),
-                percent: 0.4, // Example percentage
-              ),
-               _buildGoalSettingCard(
-                icon: Icons.brunch_dining_outlined,
-                title: 'Carbohydrates',
-                value: _carbsGoal,
-                unit: 'g',
-                onDecrement: () => setState(() => _carbsGoal -= 5),
-                onIncrement: () => setState(() => _carbsGoal += 5),
-                percent: 0.5, // Example percentage
-              ),
-              _buildGoalSettingCard(
-                icon: Icons.bolt_outlined,
-                title: 'Proteins',
-                value: _proteinsGoal,
-                unit: 'g',
-                onDecrement: () => setState(() => _proteinsGoal -= 5),
-                onIncrement: () => setState(() => _proteinsGoal += 5),
-                percent: 0.4, // Example percentage
-              ),
-              _buildGoalSettingCard(
-                icon: Icons.water_drop_outlined,
-                title: 'Fats',
-                value: _fatsGoal,
-                unit: 'g',
-                onDecrement: () => setState(() => _fatsGoal -= 2),
-                onIncrement: () => setState(() => _fatsGoal += 2),
-                percent: 0.47, // Example percentage
-              ),
-
-              const SizedBox(height: 24),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () {},
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.brightBlue,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
-                  ),
-                  child: const Text(
-                    'Save Goals',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+      body:
+          _isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : SingleChildScrollView(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const SizedBox(height: 16),
+                      const Text(
+                        'Set Your Daily Nutrition Goals',
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      const Text(
+                        'Customize your daily targets for weight, calories, and macronutrients to align with your health journey.',
+                        style: TextStyle(color: Colors.grey, fontSize: 15),
+                      ),
+                      const SizedBox(height: 24),
+                      _buildGoalSettingCard(
+                        icon: Icons.monitor_weight_outlined,
+                        title: 'Weight Goal',
+                        unit: 'g', // Changed unit
+                        controller: _controllers['weight']!,
+                        incrementAmount: 1000,
+                      ),
+                      _buildGoalSettingCard(
+                        icon: Icons.local_fire_department_outlined,
+                        title: 'Calorie Goal',
+                        unit: 'kcal',
+                        controller: _controllers['calories']!,
+                        incrementAmount: 50,
+                      ),
+                      _buildGoalSettingCard(
+                        icon: Icons.brunch_dining_outlined,
+                        title: 'Carbohydrates',
+                        unit: 'g',
+                        controller: _controllers['carbohydrates']!,
+                        incrementAmount: 10,
+                      ),
+                      _buildGoalSettingCard(
+                        icon: Icons.bolt_outlined,
+                        title: 'Proteins',
+                        unit: 'g',
+                        controller: _controllers['proteins']!,
+                        incrementAmount: 5,
+                      ),
+                      _buildGoalSettingCard(
+                        icon: Icons.water_drop_outlined,
+                        title: 'Fats',
+                        unit: 'g',
+                        controller: _controllers['fats']!,
+                        incrementAmount: 5,
+                      ),
+                      const SizedBox(height: 24),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: _isLoading ? null : _handleSaveGoals,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.brightBlue,
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(30),
+                            ),
+                          ),
+                          child:
+                              _isLoading
+                                  ? const SizedBox(
+                                    height: 24,
+                                    width: 24,
+                                    child: CircularProgressIndicator(
+                                      color: Colors.white,
+                                      strokeWidth: 3,
+                                    ),
+                                  )
+                                  : const Text(
+                                    'Save Goals',
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                    ],
                   ),
                 ),
               ),
-               const SizedBox(height: 24),
-            ],
-          ),
-        ),
-      ),
-      // The "sticky" bottom navigation bar
-      //  bottomNavigationBar: BottomNavigationBar(
-      //   items: const <BottomNavigationBarItem>[
-      //     BottomNavigationBarItem(icon: Icon(Icons.home_outlined), label: 'Home'),
-      //     BottomNavigationBarItem(icon: Icon(Icons.track_changes), label: 'Goals'),
-      //     BottomNavigationBarItem(icon: Icon(Icons.history_outlined), label: 'History'),
-      //     BottomNavigationBarItem(icon: Icon(Icons.inventory_2_outlined), label: 'Meal Box'),
-      //   ],
-      //   currentIndex: _selectedIndex, // Set to 1 for Goals
-      //   selectedItemColor: AppColors.primaryBlue,
-      //   unselectedItemColor: Colors.grey[600],
-      //   onTap: (index) => setState(() => _selectedIndex = index),
-      //   type: BottomNavigationBarType.fixed,
-      //   showUnselectedLabels: true,
-      // ),
     );
   }
 
-  // --- Reusable widget for the goal setting cards ---
   Widget _buildGoalSettingCard({
     required IconData icon,
     required String title,
-    required int value,
     required String unit,
-    required VoidCallback onDecrement,
-    required VoidCallback onIncrement,
-    required double percent,
+    required TextEditingController controller,
+    required int incrementAmount,
   }) {
     return Card(
       elevation: 0,
@@ -166,11 +269,22 @@ class _GoalSettingsPageState extends State<GoalSettingsPage> {
               children: [
                 Icon(icon, color: Colors.grey[600]),
                 const SizedBox(width: 12),
-                Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
-                const Spacer(),
                 Text(
-                  '$value ',
-                  style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: AppColors.brightBlue),
+                  title,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const Spacer(),
+                // This Text widget now dynamically updates as the controller text changes.
+                Text(
+                  '${controller.text} ',
+                  style: const TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.brightBlue,
+                  ),
                 ),
                 Text(
                   unit,
@@ -182,23 +296,34 @@ class _GoalSettingsPageState extends State<GoalSettingsPage> {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // Decrement Button
-                _buildIncrementDecrementButton(icon: Icons.remove, onPressed: onDecrement),
+                _buildIncrementDecrementButton(
+                  icon: Icons.remove,
+                  controller: controller,
+                  amount: -incrementAmount,
+                ),
                 const SizedBox(width: 16),
-                // Text Field showing the value
                 Expanded(
                   child: TextField(
-                    controller: TextEditingController(text: value.toString()),
+                    controller: controller,
                     textAlign: TextAlign.center,
-                    keyboardType: TextInputType.number,
-                    style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: false,
+                    ),
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    onChanged:
+                        (value) => setState(
+                          () {},
+                        ), // Redraws the UI to update the value display above
                     decoration: InputDecoration(
                       contentPadding: const EdgeInsets.symmetric(vertical: 10),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                         borderSide: BorderSide(color: Colors.grey.shade300),
                       ),
-                       enabledBorder: OutlineInputBorder(
+                      enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                         borderSide: BorderSide(color: Colors.grey.shade300),
                       ),
@@ -206,23 +331,12 @@ class _GoalSettingsPageState extends State<GoalSettingsPage> {
                   ),
                 ),
                 const SizedBox(width: 16),
-                // Increment Button
-                _buildIncrementDecrementButton(icon: Icons.add, onPressed: onIncrement),
+                _buildIncrementDecrementButton(
+                  icon: Icons.add,
+                  controller: controller,
+                  amount: incrementAmount,
+                ),
               ],
-            ),
-            const SizedBox(height: 16),
-            LinearPercentIndicator(
-              lineHeight: 8.0,
-              percent: percent,
-              progressColor: AppColors.brightBlue,
-              backgroundColor: Colors.grey[200],
-              barRadius: const Radius.circular(4),
-              padding: EdgeInsets.zero,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              '${(percent * 100).toInt()}% of Goal',
-              style: const TextStyle(color: Colors.grey),
             ),
           ],
         ),
@@ -230,10 +344,20 @@ class _GoalSettingsPageState extends State<GoalSettingsPage> {
     );
   }
 
-  // Helper for the circular +/- buttons
-  Widget _buildIncrementDecrementButton({required IconData icon, required VoidCallback onPressed}) {
+  Widget _buildIncrementDecrementButton({
+    required IconData icon,
+    required TextEditingController controller,
+    required int amount,
+  }) {
     return OutlinedButton(
-      onPressed: onPressed,
+      onPressed: () {
+        final currentValue = int.tryParse(controller.text) ?? 0;
+        // Ensure the value doesn't go below zero
+        final newValue = (currentValue + amount).clamp(0, 999999);
+        setState(() {
+          controller.text = newValue.toString();
+        });
+      },
       style: OutlinedButton.styleFrom(
         shape: const CircleBorder(),
         padding: const EdgeInsets.all(8),

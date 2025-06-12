@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:percent_indicator/percent_indicator.dart';
-// Adjust these import paths if they are different in your project
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cw_app/core/utils/app_colors.dart';
+import 'package:cw_app/features/client/service/firestore_service.dart';
 import 'package:cw_app/features/client/pages/goal_setting_page.dart';
+import 'package:cw_app/features/client/model/daily_summary.dart';
 
-// Converted back to a StatefulWidget to handle future dynamic data
 class GoalsPage extends StatefulWidget {
   const GoalsPage({super.key});
 
@@ -13,20 +15,11 @@ class GoalsPage extends StatefulWidget {
 }
 
 class _GoalsPageState extends State<GoalsPage> {
-  // You can add state variables here in the future for your data
-  // For example:
-  // Map<String, dynamic>? _goalData;
-  // bool _isLoading = true;
-
-  // @override
-  // void initState() {
-  //   super.initState();
-  //   // _fetchGoalData(); // You would call your data fetching method here
-  // }
+  final FirestoreService _firestoreService = FirestoreService();
+  final User? currentUser = FirebaseAuth.instance.currentUser;
 
   @override
   Widget build(BuildContext context) {
-    // The build method is now inside the _GoalsPageState class
     return Scaffold(
       backgroundColor: Colors.grey[100],
       appBar: AppBar(
@@ -34,7 +27,7 @@ class _GoalsPageState extends State<GoalsPage> {
         elevation: 0,
         leading: IconButton(
           icon: Icon(Icons.menu, color: Colors.grey[800]),
-          onPressed: () {}, // TODO: Handle drawer opening
+          onPressed: () {},
         ),
         title: Text(
           'EATRO',
@@ -48,18 +41,19 @@ class _GoalsPageState extends State<GoalsPage> {
         actions: [
           IconButton(
             icon: Icon(Icons.notifications_outlined, color: Colors.grey[800]),
-            onPressed: () {}, // TODO: Handle notifications
+            onPressed: () {},
           ),
-          const Padding(
-            padding: EdgeInsets.only(right: 12.0),
+          Padding(
+            padding: const EdgeInsets.only(right: 12.0),
             child: CircleAvatar(
               radius: 18,
-              backgroundImage: NetworkImage('https://i.pravatar.cc/150?img=3'),
+              backgroundImage: NetworkImage(
+                currentUser?.photoURL ?? 'https://i.pravatar.cc/150?img=3',
+              ),
             ),
           ),
         ],
       ),
-      // Scrollable body content
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
@@ -69,7 +63,6 @@ class _GoalsPageState extends State<GoalsPage> {
               const SizedBox(height: 16),
               _buildNutrientGrid(),
               const SizedBox(height: 16),
-              // The build method now has access to 'context' directly
               _buildDailyGoalProgressCard(),
             ],
           ),
@@ -78,48 +71,226 @@ class _GoalsPageState extends State<GoalsPage> {
     );
   }
 
-  // --- Helper methods are now part of the _GoalsPageState class ---
-
   Widget _buildTopStatusCard() {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(20.0),
-      child: Container(
+    if (currentUser == null) {
+      return const SizedBox(
         height: 200,
-        decoration: const BoxDecoration(
-          image: DecorationImage(
-            image: AssetImage('lib/core/assets/frosty_background.jpg'),
-            fit: BoxFit.cover,
+        child: Center(child: Text("Please log in.")),
+      );
+    }
+
+    return StreamBuilder<QuerySnapshot>(
+      stream: _firestoreService.getGoalsStream(currentUser!.uid),
+      builder: (context, goalsSnapshot) {
+        if (!goalsSnapshot.hasData) {
+          return const SizedBox(
+            height: 200,
+            child: Center(child: CircularProgressIndicator()),
+          );
+        }
+
+        final goals = {
+          for (var doc in goalsSnapshot.data!.docs) doc.id: doc.data() as Map,
+        };
+        final weightGoal = (goals['weight']?['target'] ?? 0).toDouble();
+
+        return StreamBuilder<DailySummary>(
+          stream: _firestoreService.getDailySummaryStream(currentUser!.uid),
+          builder: (context, summarySnapshot) {
+            final latestWeight = summarySnapshot.data?.latestWeight ?? 0.0;
+            final weightText =
+                latestWeight > 0 ? latestWeight.toStringAsFixed(0) : '--';
+            final progress =
+                weightGoal > 0
+                    ? (latestWeight / weightGoal).clamp(0.0, 1.0)
+                    : 0.0;
+
+            return ClipRRect(
+              borderRadius: BorderRadius.circular(20.0),
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  vertical: 24,
+                  horizontal: 20,
+                ),
+                height: 200,
+                decoration: const BoxDecoration(
+                  image: DecorationImage(
+                    image: AssetImage('lib/core/assets/frosty_background.jpg'),
+                    fit: BoxFit.cover,
+                  ),
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      "$weightText grams",
+                      style: const TextStyle(
+                        color: AppColors.brightBlue,
+                        fontSize: 52,
+                        fontWeight: FontWeight.bold,
+                        shadows: [
+                          Shadow(blurRadius: 10.0, color: Colors.black45),
+                        ],
+                      ),
+                    ),
+                    const Spacer(),
+                    LinearPercentIndicator(
+                      lineHeight: 10.0,
+                      percent: progress,
+                      progressColor: AppColors.brightBlue,
+                      backgroundColor: Colors.grey.withOpacity(0.3),
+                      barRadius: const Radius.circular(5),
+                      padding: EdgeInsets.zero,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Target: ${weightGoal.toStringAsFixed(0)} g',
+                      style: const TextStyle(
+                        color: AppColors.brightBlue,
+                        fontWeight: FontWeight.w500,
+                        shadows: [
+                          Shadow(blurRadius: 2.0, color: Colors.black45),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildNutrientGrid() {
+    if (currentUser == null) {
+      return const SizedBox.shrink();
+    }
+
+    return StreamBuilder<QuerySnapshot>(
+      stream: _firestoreService.getGoalsStream(currentUser!.uid),
+      builder: (context, goalsSnapshot) {
+        if (goalsSnapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (!goalsSnapshot.hasData || goalsSnapshot.data!.docs.isEmpty) {
+          return _buildEmptyGoalsState();
+        }
+
+        final goals = {
+          for (var doc in goalsSnapshot.data!.docs) doc.id: doc.data() as Map,
+        };
+        final calorieGoal = (goals['calories']?['target'] ?? 0).toDouble();
+        final proteinGoal = (goals['proteins']?['target'] ?? 0).toDouble();
+        final carbsGoal = (goals['carbohydrates']?['target'] ?? 0).toDouble();
+        final fatsGoal = (goals['fats']?['target'] ?? 0).toDouble();
+
+        return StreamBuilder<DailySummary>(
+          stream: _firestoreService.getDailySummaryStream(currentUser!.uid),
+          builder: (context, summarySnapshot) {
+            final summary = summarySnapshot.data ?? DailySummary();
+
+            return GridView.count(
+              crossAxisCount: 2,
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              crossAxisSpacing: 16,
+              mainAxisSpacing: 16,
+              childAspectRatio: 1.1,
+              children: [
+                _NutrientCard(
+                  label: 'Calories',
+                  icon: Icons.local_fire_department_outlined,
+                  value: summary.totalCalories.toStringAsFixed(0),
+                  unit: 'kcal',
+                  target: 'Target: ${calorieGoal.toStringAsFixed(0)}kcal',
+                  progress:
+                      calorieGoal > 0
+                          ? (summary.totalCalories / calorieGoal).clamp(
+                            0.0,
+                            1.0,
+                          )
+                          : 0.0,
+                  color: AppColors.primaryBlue,
+                ),
+                _NutrientCard(
+                  label: 'Protein',
+                  icon: Icons.bolt_outlined,
+                  value: summary.totalProtein.toStringAsFixed(0),
+                  unit: 'g',
+                  target: 'Target: ${proteinGoal.toStringAsFixed(0)}g',
+                  progress:
+                      proteinGoal > 0
+                          ? (summary.totalProtein / proteinGoal).clamp(0.0, 1.0)
+                          : 0.0,
+                  color: AppColors.primaryBlue,
+                ),
+                _NutrientCard(
+                  label: 'Carbs',
+                  icon: Icons.brunch_dining_outlined,
+                  value: summary.totalCarbs.toStringAsFixed(0),
+                  unit: 'g',
+                  target: 'Target: ${carbsGoal.toStringAsFixed(0)}g',
+                  progress:
+                      carbsGoal > 0
+                          ? (summary.totalCarbs / carbsGoal).clamp(0.0, 1.0)
+                          : 0.0,
+                  color: Colors.pinkAccent,
+                ),
+                _NutrientCard(
+                  label: 'Fats',
+                  icon: Icons.water_drop_outlined,
+                  value: summary.totalFats.toStringAsFixed(0),
+                  unit: 'g',
+                  target: 'Target: ${fatsGoal.toStringAsFixed(0)}g',
+                  progress:
+                      fatsGoal > 0
+                          ? (summary.totalFats / fatsGoal).clamp(0.0, 1.0)
+                          : 0.0,
+                  color: Colors.pinkAccent,
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildEmptyGoalsState() {
+    return GestureDetector(
+      onTap:
+          () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const GoalSettingsPage()),
           ),
+      child: Container(
+        height: 180,
+        width: double.infinity,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.grey.shade300, width: 1.5),
         ),
-        child: const Center(
+        child: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text(
-                "450 grams",
-                style: TextStyle(
-                  color: AppColors.brightBlue,
-                  fontSize: 52,
-                  fontWeight: FontWeight.bold,
-                  shadows: [Shadow(blurRadius: 10.0, color: Colors.black45)],
-                ),
+              Icon(
+                Icons.add_circle_outline,
+                color: AppColors.primaryBlue,
+                size: 40,
               ),
-              SizedBox(height: 8),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.thermostat, color: Colors.redAccent, size: 20),
-                  SizedBox(width: 4),
-                  Text(
-                    "25°C, Optimal",
-                    style: TextStyle(
-                      color: AppColors.brightBlue,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
-                      shadows: [Shadow(blurRadius: 8.0, color: Colors.black45)],
-                    ),
-                  ),
-                ],
+              const SizedBox(height: 16),
+              const Text(
+                "Set Your Nutrition Goals",
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                "Tap here to get started.",
+                style: TextStyle(fontSize: 15, color: Colors.grey.shade600),
               ),
             ],
           ),
@@ -128,56 +299,8 @@ class _GoalsPageState extends State<GoalsPage> {
     );
   }
 
-  Widget _buildNutrientGrid() {
-    return GridView.count(
-      crossAxisCount: 2,
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      crossAxisSpacing: 16,
-      mainAxisSpacing: 16,
-      childAspectRatio: 1.1,
-      children: [
-        _NutrientCard(
-          icon: Icons.local_fire_department_outlined,
-          label: 'Calories',
-          value: '1250',
-          unit: 'kcal',
-          target: 'Target: 2000kcal',
-          progress: 1250 / 2000,
-          color: Colors.lightBlue,
-        ),
-        _NutrientCard(
-          icon: Icons.bolt_outlined,
-          label: 'Protein',
-          value: '75',
-          unit: 'g',
-          target: 'Target: 100g',
-          progress: 75 / 100,
-          color: Colors.lightBlue,
-        ),
-        _NutrientCard(
-          icon: Icons.brunch_dining_outlined,
-          label: 'Carbs',
-          value: '150',
-          unit: 'g',
-          target: 'Target: 250g',
-          progress: 150 / 250,
-          color: Colors.pinkAccent,
-        ),
-        _NutrientCard(
-          icon: Icons.water_drop_outlined,
-          label: 'Fats',
-          value: '40',
-          unit: 'g',
-          target: 'Target: 60g',
-          progress: 40 / 60,
-          color: Colors.pinkAccent,
-        ),
-      ],
-    );
-  }
-
   Widget _buildDailyGoalProgressCard() {
+    // This can be made dynamic later
     return Container(
       padding: const EdgeInsets.all(16.0),
       decoration: BoxDecoration(
@@ -197,30 +320,7 @@ class _GoalsPageState extends State<GoalsPage> {
               ),
             ],
           ),
-          const SizedBox(height: 8),
-          const Text(
-            "Calories consumed vs. your daily target.",
-            style: TextStyle(color: Colors.grey),
-          ),
-          const SizedBox(height: 16),
-          LinearPercentIndicator(
-            lineHeight: 18.0,
-            percent: 1850 / (1850 + 650),
-            progressColor: AppColors.primaryBlue,
-            backgroundColor: Colors.grey[200],
-            barRadius: const Radius.circular(10),
-          ),
-          const SizedBox(height: 16),
-          const Row(
-            children: [
-              _Legend(
-                color: AppColors.primaryBlue,
-                text: "Consumed: 1850 kcal",
-              ),
-              SizedBox(width: 5),
-              _Legend(color: Colors.grey, text: "Remaining: 650 kcal"),
-            ],
-          ),
+
           const SizedBox(height: 20),
           OutlinedButton.icon(
             onPressed: () {
@@ -248,8 +348,6 @@ class _GoalsPageState extends State<GoalsPage> {
   }
 }
 
-// --- Custom sub-widgets (These can remain stateless) ---
-
 class _NutrientCard extends StatelessWidget {
   final IconData icon;
   final String label, value, unit, target;
@@ -268,7 +366,6 @@ class _NutrientCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // ... code for this widget is unchanged ...
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -330,7 +427,6 @@ class _Legend extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // ... code for this widget is unchanged ...
     return Row(
       children: [
         Container(
