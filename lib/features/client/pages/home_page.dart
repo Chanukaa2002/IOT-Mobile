@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:percent_indicator/percent_indicator.dart';
-// Adjust this import path to point to your AppColors file
 import 'package:cw_app/core/utils/app_colors.dart';
+import 'package:cw_app/features/client/service/rtdb_service.dart';
+import 'package:cw_app/features/client/model/sensor_data.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -11,13 +12,12 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-
+  final RtdbService _rtdbService = RtdbService();
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey[100],
-      // The AppBar at the top of the screen
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
@@ -43,13 +43,11 @@ class _HomePageState extends State<HomePage> {
             padding: EdgeInsets.only(right: 12.0),
             child: CircleAvatar(
               radius: 18,
-              // Replace with your user's profile image
               backgroundImage: NetworkImage('https://i.pravatar.cc/150?img=3'),
             ),
           ),
         ],
       ),
-      // The main content of the screen is a scrollable list of cards
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
@@ -68,29 +66,9 @@ class _HomePageState extends State<HomePage> {
           ),
         ),
       ),
-      // The "sticky" bottom navigation bar
-      // bottomNavigationBar: BottomNavigationBar(
-      //   items: const <BottomNavigationBarItem>[
-      //     BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-      //     BottomNavigationBarItem(icon: Icon(Icons.track_changes), label: 'Goals'),
-      //     BottomNavigationBarItem(icon: Icon(Icons.history), label: 'History'),
-      //     BottomNavigationBarItem(
-      //       icon: Icon(Icons.inventory_2_outlined),
-      //       label: 'Meal Box',
-      //     ),
-      //   ],
-      //   currentIndex: _selectedIndex,
-      //   selectedItemColor: AppColors.primaryBlue,
-      //   unselectedItemColor: Colors.grey[600],
-      //   onTap: _onItemTapped,
-      //   type:
-      //       BottomNavigationBarType.fixed, // Ensures labels are always visible
-      //   showUnselectedLabels: true,
-      // ),
     );
   }
 
-  // --- Helper methods to build each card ---
 
   Widget _buildCard({
     required Widget child,
@@ -135,7 +113,7 @@ class _HomePageState extends State<HomePage> {
           CircularPercentIndicator(
             radius: 80.0,
             lineWidth: 15.0,
-            percent: 0.7, // 250g / (total weight) - example
+            percent: 0.7, // Example
             center: const Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -154,7 +132,7 @@ class _HomePageState extends State<HomePage> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
-              color: Colors.grey[100],
+              color: Colors.red[100],
               borderRadius: BorderRadius.circular(20),
             ),
             child: Text(
@@ -193,6 +171,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildNutritionalSummaryCard() {
+    // This card is static for now
     return _buildCard(
       title: 'Nutritional Summary',
       icon: Icons.summarize_outlined,
@@ -250,7 +229,7 @@ class _HomePageState extends State<HomePage> {
           const SizedBox(height: 16),
           LinearPercentIndicator(
             lineHeight: 18.0,
-            percent: 1850 / (1850 + 650), // Consumed / Total
+            percent: 1850 / (1850 + 650),
             progressColor: AppColors.primaryBlue,
             backgroundColor: Colors.grey[200],
             barRadius: const Radius.circular(50),
@@ -275,20 +254,38 @@ class _HomePageState extends State<HomePage> {
     return _buildCard(
       title: 'Real-Time Monitoring',
       icon: Icons.sensors_outlined,
-      child: const Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          _MonitoringInfo(
-            icon: Icons.thermostat_outlined,
-            value: "4 °C",
-            label: "Temperature",
-          ),
-          _MonitoringInfo(
-            icon: Icons.monitor_weight_outlined,
-            value: "870 g",
-            label: "Live Weight",
-          ),
-        ],
+      child: StreamBuilder<SensorData>(
+        stream: _rtdbService.getSensorDataStream(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          if (snapshot.hasError) {
+            return Center(child: Text('Error: ${snapshot.error}'));
+          }
+
+          if (snapshot.hasData) {
+            final sensorData = snapshot.data!;
+            return Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                _MonitoringInfo(
+                  icon: Icons.thermostat_outlined,
+                  value: "${sensorData.temperature.toStringAsFixed(1)} °C",
+                  label: "Temperature",
+                ),
+                _MonitoringInfo(
+                  icon: Icons.monitor_weight_outlined,
+                  value: "${sensorData.liveWeight.toStringAsFixed(0)} g",
+                  label: "Live Weight",
+                ),
+              ],
+            );
+          }
+
+          // Default case (e.g., no data yet)
+          return const Center(child: Text("Waiting for sensor data..."));
+        },
       ),
     );
   }
@@ -344,7 +341,7 @@ class _HomePageState extends State<HomePage> {
   }
 }
 
-// --- Custom sub-widgets for cards to avoid repetition ---
+// --- Custom sub-widgets (unchanged) ---
 
 class _NutrientInfo extends StatelessWidget {
   final IconData icon;
