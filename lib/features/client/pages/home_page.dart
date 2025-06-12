@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:percent_indicator/percent_indicator.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cw_app/core/utils/app_colors.dart';
 import 'package:cw_app/features/client/service/rtdb_service.dart';
 import 'package:cw_app/features/client/model/sensor_data.dart';
+import 'package:cw_app/features/client/service/firestore_service.dart';
+import 'package:cw_app/features/client/model/daily_summary.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -13,6 +16,9 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   final RtdbService _rtdbService = RtdbService();
+  final FirestoreService _firestoreService = FirestoreService();
+
+  final User? currentUser = FirebaseAuth.instance.currentUser;
 
   @override
   Widget build(BuildContext context) {
@@ -39,11 +45,14 @@ class _HomePageState extends State<HomePage> {
             icon: Icon(Icons.notifications_outlined, color: Colors.grey[800]),
             onPressed: () {}, // TODO: Handle notifications
           ),
-          const Padding(
-            padding: EdgeInsets.only(right: 12.0),
+          Padding(
+            padding: const EdgeInsets.only(right: 12.0),
             child: CircleAvatar(
               radius: 18,
-              backgroundImage: NetworkImage('https://i.pravatar.cc/150?img=3'),
+              // TODO: Replace with your user's actual profile image from Firestore
+              backgroundImage: NetworkImage(
+                currentUser?.photoURL ?? 'https://i.pravatar.cc/150?img=3',
+              ),
             ),
           ),
         ],
@@ -105,6 +114,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildMealBoxStatusCard() {
+    // This card is currently static but can be updated with live data later
     return _buildCard(
       title: 'Meal Box Status',
       icon: Icons.restaurant_menu_outlined,
@@ -171,51 +181,78 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildNutritionalSummaryCard() {
-    // This card is static for now
+    if (currentUser == null) {
+      return _buildCard(
+        title: 'Nutritional Summary',
+        icon: Icons.summarize_outlined,
+        child: const Center(child: Text("Please log in to see your summary.")),
+      );
+    }
+
     return _buildCard(
       title: 'Nutritional Summary',
       icon: Icons.summarize_outlined,
-      child: Column(
-        children: [
-          const Text("Today's Intake", style: TextStyle(color: Colors.grey)),
-          const Text(
-            "1850 kcal",
-            style: TextStyle(
-              fontSize: 48,
-              fontWeight: FontWeight.bold,
-              color: AppColors.primaryBlue,
-            ),
-          ),
-          const SizedBox(height: 16),
-          const Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              _NutrientInfo(
-                icon: Icons.local_fire_department,
-                value: "220 g",
-                label: "Carbs",
-                color: Colors.orange,
-              ),
-              _NutrientInfo(
-                icon: Icons.bolt,
-                value: "85 g",
-                label: "Proteins",
-                color: Colors.red,
-              ),
-              _NutrientInfo(
-                icon: Icons.water_drop,
-                value: "60 g",
-                label: "Fats",
-                color: Colors.purple,
-              ),
-            ],
-          ),
-        ],
+      child: StreamBuilder<DailySummary>(
+        stream: _firestoreService.getDailySummaryStream(currentUser!.uid),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          if (snapshot.hasError) {
+            return Center(child: Text('Error: ${snapshot.error}'));
+          }
+          if (snapshot.hasData) {
+            final summary = snapshot.data!;
+            return Column(
+              children: [
+                const Text(
+                  "Today's Intake",
+                  style: TextStyle(color: Colors.grey),
+                ),
+                Text(
+                  "${summary.totalCalories.toStringAsFixed(0)} kcal",
+                  style: const TextStyle(
+                    fontSize: 48,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.primaryBlue,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    _NutrientInfo(
+                      icon: Icons.local_fire_department,
+                      value: "${summary.totalCarbs.toStringAsFixed(0)} g",
+                      label: "Carbs",
+                      color: Colors.orange,
+                    ),
+                    _NutrientInfo(
+                      icon: Icons.bolt,
+                      value: "${summary.totalProtein.toStringAsFixed(0)} g",
+                      label: "Proteins",
+                      color: Colors.red,
+                    ),
+                    _NutrientInfo(
+                      icon: Icons.water_drop,
+                      value: "${summary.totalFats.toStringAsFixed(0)} g",
+                      label: "Fats",
+                      color: Colors.purple,
+                    ),
+                  ],
+                ),
+              ],
+            );
+          }
+          // Default state if there's no data yet for today
+          return const Center(child: Text("No meals recorded today."));
+        },
       ),
     );
   }
 
   Widget _buildDailyGoalProgressCard() {
+    // This card is static for now, but can be updated later to use live goal data
     return _buildCard(
       title: 'Daily Goal Progress',
       icon: Icons.track_changes_outlined,
@@ -229,7 +266,7 @@ class _HomePageState extends State<HomePage> {
           const SizedBox(height: 16),
           LinearPercentIndicator(
             lineHeight: 18.0,
-            percent: 1850 / (1850 + 650),
+            percent: 1850 / (1850 + 650), // Example data
             progressColor: AppColors.primaryBlue,
             backgroundColor: Colors.grey[200],
             barRadius: const Radius.circular(50),
@@ -263,7 +300,6 @@ class _HomePageState extends State<HomePage> {
           if (snapshot.hasError) {
             return Center(child: Text('Error: ${snapshot.error}'));
           }
-
           if (snapshot.hasData) {
             final sensorData = snapshot.data!;
             return Row(
@@ -282,8 +318,6 @@ class _HomePageState extends State<HomePage> {
               ],
             );
           }
-
-          // Default case (e.g., no data yet)
           return const Center(child: Text("Waiting for sensor data..."));
         },
       ),
@@ -291,6 +325,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildUpcomingMealCard() {
+    // This card is static for now
     return Container(
       padding: const EdgeInsets.all(16.0),
       decoration: BoxDecoration(
@@ -341,7 +376,7 @@ class _HomePageState extends State<HomePage> {
   }
 }
 
-// --- Custom sub-widgets (unchanged) ---
+// --- Custom sub-widgets for cards to avoid repetition ---
 
 class _NutrientInfo extends StatelessWidget {
   final IconData icon;
