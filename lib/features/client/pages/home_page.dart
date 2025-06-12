@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:percent_indicator/percent_indicator.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+
+// Your app's custom files
 import 'package:cw_app/core/utils/app_colors.dart';
 import 'package:cw_app/features/client/service/rtdb_service.dart';
 import 'package:cw_app/features/client/model/sensor_data.dart';
@@ -17,7 +20,6 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   final RtdbService _rtdbService = RtdbService();
   final FirestoreService _firestoreService = FirestoreService();
-
   final User? currentUser = FirebaseAuth.instance.currentUser;
 
   @override
@@ -29,7 +31,7 @@ class _HomePageState extends State<HomePage> {
         elevation: 0,
         leading: IconButton(
           icon: Icon(Icons.menu, color: Colors.grey[800]),
-          onPressed: () {}, // TODO: Handle drawer opening
+          onPressed: () {},
         ),
         title: Text(
           'EATRO',
@@ -43,13 +45,12 @@ class _HomePageState extends State<HomePage> {
         actions: [
           IconButton(
             icon: Icon(Icons.notifications_outlined, color: Colors.grey[800]),
-            onPressed: () {}, // TODO: Handle notifications
+            onPressed: () {},
           ),
           Padding(
             padding: const EdgeInsets.only(right: 12.0),
             child: CircleAvatar(
               radius: 18,
-              // TODO: Replace with your user's actual profile image from Firestore
               backgroundImage: NetworkImage(
                 currentUser?.photoURL ?? 'https://i.pravatar.cc/150?img=3',
               ),
@@ -66,7 +67,7 @@ class _HomePageState extends State<HomePage> {
               const SizedBox(height: 16),
               _buildNutritionalSummaryCard(),
               const SizedBox(height: 16),
-              _buildDailyGoalProgressCard(),
+              _buildDailyGoalProgressCard(), // This card is now fully dynamic
               const SizedBox(height: 16),
               _buildRealTimeMonitoringCard(),
               const SizedBox(height: 16),
@@ -78,6 +79,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  // --- Helper methods to build each card ---
 
   Widget _buildCard({
     required Widget child,
@@ -114,7 +116,6 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildMealBoxStatusCard() {
-    // This card is currently static but can be updated with live data later
     return _buildCard(
       title: 'Meal Box Status',
       icon: Icons.restaurant_menu_outlined,
@@ -123,7 +124,7 @@ class _HomePageState extends State<HomePage> {
           CircularPercentIndicator(
             radius: 80.0,
             lineWidth: 15.0,
-            percent: 0.7, // Example
+            percent: 0.7,
             center: const Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -244,45 +245,95 @@ class _HomePageState extends State<HomePage> {
               ],
             );
           }
-          // Default state if there's no data yet for today
           return const Center(child: Text("No meals recorded today."));
         },
       ),
     );
   }
 
+  // --- THIS WIDGET IS NOW CORRECTED AND DYNAMIC ---
   Widget _buildDailyGoalProgressCard() {
-    // This card is static for now, but can be updated later to use live goal data
+    if (currentUser == null) {
+      return const SizedBox.shrink();
+    }
+
     return _buildCard(
       title: 'Daily Goal Progress',
       icon: Icons.track_changes_outlined,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            "Calories consumed vs. your daily target.",
-            style: TextStyle(color: Colors.grey),
-          ),
-          const SizedBox(height: 16),
-          LinearPercentIndicator(
-            lineHeight: 18.0,
-            percent: 1850 / (1850 + 650), // Example data
-            progressColor: AppColors.primaryBlue,
-            backgroundColor: Colors.grey[200],
-            barRadius: const Radius.circular(50),
-          ),
-          const SizedBox(height: 16),
-          const Row(
-            children: [
-              _Legend(
-                color: AppColors.primaryBlue,
-                text: "Consumed: 1850 kcal",
-              ),
-              SizedBox(width: 5),
-              _Legend(color: Colors.grey, text: "Remaining: 650 kcal"),
-            ],
-          ),
-        ],
+      // We use nested StreamBuilders, which require no extra packages.
+      child: StreamBuilder<QuerySnapshot>(
+        stream: _firestoreService.getGoalsStream(currentUser!.uid),
+        builder: (context, goalsSnapshot) {
+          // While waiting for goals, show a loading indicator.
+          if (goalsSnapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          // If we couldn't get goals, show an error.
+          if (goalsSnapshot.hasError) {
+            return Center(child: Text('Error: ${goalsSnapshot.error}'));
+          }
+          // If the user has no goals set, show a helpful message.
+          if (!goalsSnapshot.hasData || goalsSnapshot.data!.docs.isEmpty) {
+            return const Center(
+              child: Text("Set a calorie goal to see progress."),
+            );
+          }
+
+          // We have goals, so now we fetch the daily summary.
+          final goals = {
+            for (var doc in goalsSnapshot.data!.docs) doc.id: doc.data() as Map,
+          };
+          final calorieGoal = (goals['calories']?['target'] ?? 0).toDouble();
+
+          return StreamBuilder<DailySummary>(
+            stream: _firestoreService.getDailySummaryStream(currentUser!.uid),
+            builder: (context, summarySnapshot) {
+              // Get the summary data, defaulting to 0 if it hasn't loaded yet.
+              final summary = summarySnapshot.data ?? DailySummary();
+
+              final remainingCalories = (calorieGoal - summary.totalCalories)
+                  .clamp(0.0, calorieGoal);
+              final progress =
+                  calorieGoal > 0
+                      ? (summary.totalCalories / calorieGoal).clamp(0.0, 1.0)
+                      : 0.0;
+
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    "Calories consumed vs. your daily target.",
+                    style: TextStyle(color: Colors.grey),
+                  ),
+                  const SizedBox(height: 16),
+                  LinearPercentIndicator(
+                    lineHeight: 18.0,
+                    percent: progress,
+                    progressColor: AppColors.primaryBlue,
+                    backgroundColor: Colors.grey[200],
+                    barRadius: const Radius.circular(50),
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      _Legend(
+                        color: AppColors.primaryBlue,
+                        text:
+                            "Consumed: ${summary.totalCalories.toStringAsFixed(0)} kcal",
+                      ),
+                      const Spacer(),
+                      _Legend(
+                        color: Colors.grey,
+                        text:
+                            "Remaining: ${remainingCalories.toStringAsFixed(0)} kcal",
+                      ),
+                    ],
+                  ),
+                ],
+              );
+            },
+          );
+        },
       ),
     );
   }
@@ -325,7 +376,6 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildUpcomingMealCard() {
-    // This card is static for now
     return Container(
       padding: const EdgeInsets.all(16.0),
       decoration: BoxDecoration(
@@ -376,7 +426,7 @@ class _HomePageState extends State<HomePage> {
   }
 }
 
-// --- Custom sub-widgets for cards to avoid repetition ---
+// --- Custom sub-widgets ---
 
 class _NutrientInfo extends StatelessWidget {
   final IconData icon;
