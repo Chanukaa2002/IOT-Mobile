@@ -4,14 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:percent_indicator/percent_indicator.dart';
 import 'package:intl/intl.dart';
-
-// --- Adjust these import paths to match your project structure ---
 import 'package:cw_app/core/utils/app_colors.dart';
-import 'package:cw_app/features/client/model/daily_summary.dart';
 import 'package:cw_app/features/client/service/firestore_service.dart';
-import 'package:cw_app/core/utils/time_period.dart'; // Make sure you created and import this file
+import 'package:cw_app/core/utils/time_period.dart';
 
-// Main History Page - responsible for the overall layout and the "Today's Calories" card.
 class HistoryPage extends StatefulWidget {
   const HistoryPage({super.key});
 
@@ -25,7 +21,6 @@ class _HistoryPageState extends State<HistoryPage> {
   User? _user;
   String? _userId;
 
-  // This state is now only used for goal-related calculations.
   Map<String, double> _userGoals = {
     'calories': 2500,
     'carbs': 300,
@@ -118,7 +113,6 @@ class _HistoryPageState extends State<HistoryPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // This StreamBuilder now builds the ALL-TIME calories card.
               StreamBuilder<double>(
                 stream: _firestoreService.getTotalCalorieStream(_userId!),
                 builder: (context, snapshot) {
@@ -134,7 +128,6 @@ class _HistoryPageState extends State<HistoryPage> {
                 },
               ),
               const SizedBox(height: 24),
-              // The self-contained, stateful chart cards remain unchanged.
               WeightTrendCard(userId: _userId!),
               const SizedBox(height: 16),
               CalorieIntakeTrendCard(userId: _userId!),
@@ -150,7 +143,6 @@ class _HistoryPageState extends State<HistoryPage> {
     );
   }
 
-  // Helper method for the top "All-Time Calories" card.
   Widget _buildTotalCaloriesCard(double totalCalories) {
     return Container(
       padding: const EdgeInsets.all(20),
@@ -196,11 +188,6 @@ class _HistoryPageState extends State<HistoryPage> {
     );
   }
 }
-
-// ================================================================= //
-//               SELF-CONTAINED CHART WIDGETS (UNCHANGED)            //
-// ================================================================= //
-// --- Weight Trend Chart Card ---
 class WeightTrendCard extends StatefulWidget {
   final String userId;
   const WeightTrendCard({super.key, required this.userId});
@@ -283,7 +270,6 @@ class _WeightTrendCardState extends State<WeightTrendCard> {
   }
 }
 
-// --- Calorie Intake Chart Card ---
 class CalorieIntakeTrendCard extends StatefulWidget {
   final String userId;
   const CalorieIntakeTrendCard({super.key, required this.userId});
@@ -346,7 +332,6 @@ class _CalorieIntakeTrendCardState extends State<CalorieIntakeTrendCard> {
   }
 }
 
-// --- Macronutrient Breakdown Chart Card (NOW INCLUDES SUMMARY) ---
 class MacronutrientBreakdownCard extends StatefulWidget {
   final String userId;
   final Map<String, double> userGoals;
@@ -548,9 +533,6 @@ class _MacronutrientBreakdownCardState
   }
 }
 
-// ================================================================= //
-//                      COMMON WIDGETS & HELPERS                       //
-// ================================================================= //
 Widget _buildChartCard({
   required String title,
   required IconData icon,
@@ -674,9 +656,9 @@ Widget _getBarChartTitles(double value, TitleMeta meta) {
       break;
   }
   return SideTitleWidget(
-    space: 4, // Adjust the space between the chart and the title
+    space: 4, 
     child: text,
-    meta: meta, // Pass the required meta parameter
+    meta: meta,
   );
 }
 

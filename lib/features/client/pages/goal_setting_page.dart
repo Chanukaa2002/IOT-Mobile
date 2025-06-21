@@ -1,9 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:percent_indicator/percent_indicator.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
-// Your app's custom files
 import 'package:cw_app/core/utils/app_colors.dart';
 import 'package:cw_app/features/client/service/firestore_service.dart';
 
@@ -67,7 +65,6 @@ class _GoalSettingsPageState extends State<GoalSettingsPage> {
         );
       }
     } finally {
-      // Hide the loading spinner once fetching is done
       if (mounted) {
         setState(() => _isLoading = false);
       }
@@ -104,7 +101,7 @@ class _GoalSettingsPageState extends State<GoalSettingsPage> {
             backgroundColor: Colors.green,
           ),
         );
-        Navigator.of(context).pop(); // Go back to GoalsPage on success
+        Navigator.of(context).pop();
       }
     } on TimeoutException catch (_) {
       if (mounted) {
@@ -277,7 +274,6 @@ class _GoalSettingsPageState extends State<GoalSettingsPage> {
                   ),
                 ),
                 const Spacer(),
-                // This Text widget now dynamically updates as the controller text changes.
                 Text(
                   '${controller.text} ',
                   style: const TextStyle(

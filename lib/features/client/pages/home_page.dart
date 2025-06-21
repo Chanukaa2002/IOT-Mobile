@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:percent_indicator/percent_indicator.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-
-// Your app's custom files
 import 'package:cw_app/core/utils/app_colors.dart';
 import 'package:cw_app/features/client/service/rtdb_service.dart';
 import 'package:cw_app/features/client/model/sensor_data.dart';
@@ -67,7 +65,7 @@ class _HomePageState extends State<HomePage> {
               const SizedBox(height: 16),
               _buildNutritionalSummaryCard(),
               const SizedBox(height: 16),
-              _buildDailyGoalProgressCard(), // This card is now fully dynamic
+              _buildDailyGoalProgressCard(),
               const SizedBox(height: 16),
               _buildRealTimeMonitoringCard(),
               const SizedBox(height: 16),
@@ -79,7 +77,6 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  // --- Helper methods to build each card ---
 
   Widget _buildCard({
     required Widget child,
@@ -129,7 +126,7 @@ class _HomePageState extends State<HomePage> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
-                  "250",
+                  "0",
                   style: TextStyle(fontWeight: FontWeight.bold, fontSize: 40),
                 ),
                 Text("Remaining", style: TextStyle(color: Colors.grey)),
@@ -251,7 +248,6 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  // --- THIS WIDGET IS NOW CORRECTED AND DYNAMIC ---
   Widget _buildDailyGoalProgressCard() {
     if (currentUser == null) {
       return const SizedBox.shrink();
@@ -260,26 +256,21 @@ class _HomePageState extends State<HomePage> {
     return _buildCard(
       title: 'Daily Goal Progress',
       icon: Icons.track_changes_outlined,
-      // We use nested StreamBuilders, which require no extra packages.
       child: StreamBuilder<QuerySnapshot>(
         stream: _firestoreService.getGoalsStream(currentUser!.uid),
         builder: (context, goalsSnapshot) {
-          // While waiting for goals, show a loading indicator.
           if (goalsSnapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           }
-          // If we couldn't get goals, show an error.
           if (goalsSnapshot.hasError) {
             return Center(child: Text('Error: ${goalsSnapshot.error}'));
           }
-          // If the user has no goals set, show a helpful message.
           if (!goalsSnapshot.hasData || goalsSnapshot.data!.docs.isEmpty) {
             return const Center(
               child: Text("Set a calorie goal to see progress."),
             );
           }
 
-          // We have goals, so now we fetch the daily summary.
           final goals = {
             for (var doc in goalsSnapshot.data!.docs) doc.id: doc.data() as Map,
           };
@@ -288,7 +279,6 @@ class _HomePageState extends State<HomePage> {
           return StreamBuilder<DailySummary>(
             stream: _firestoreService.getDailySummaryStream(currentUser!.uid),
             builder: (context, summarySnapshot) {
-              // Get the summary data, defaulting to 0 if it hasn't loaded yet.
               final summary = summarySnapshot.data ?? DailySummary();
 
               final remainingCalories = (calorieGoal - summary.totalCalories)
@@ -426,7 +416,6 @@ class _HomePageState extends State<HomePage> {
   }
 }
 
-// --- Custom sub-widgets ---
 
 class _NutrientInfo extends StatelessWidget {
   final IconData icon;
