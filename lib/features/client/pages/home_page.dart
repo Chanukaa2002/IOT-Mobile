@@ -22,61 +22,23 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.grey[100],
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        leading: IconButton(
-          icon: Icon(Icons.menu, color: Colors.grey[800]),
-          onPressed: () {},
-        ),
-        title: Text(
-          'EATRO',
-          style: TextStyle(
-            color: Colors.grey[800],
-            fontWeight: FontWeight.bold,
-            letterSpacing: 1.2,
-          ),
-        ),
-        centerTitle: true,
-        actions: [
-          IconButton(
-            icon: Icon(Icons.notifications_outlined, color: Colors.grey[800]),
-            onPressed: () {},
-          ),
-          Padding(
-            padding: const EdgeInsets.only(right: 12.0),
-            child: CircleAvatar(
-              radius: 18,
-              backgroundImage: NetworkImage(
-                currentUser?.photoURL ?? 'https://i.pravatar.cc/150?img=3',
-              ),
-            ),
-          ),
-        ],
-      ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            children: [
-              _buildMealBoxStatusCard(),
-              const SizedBox(height: 16),
-              _buildNutritionalSummaryCard(),
-              const SizedBox(height: 16),
-              _buildDailyGoalProgressCard(),
-              const SizedBox(height: 16),
-              _buildRealTimeMonitoringCard(),
-              const SizedBox(height: 16),
-              _buildUpcomingMealCard(),
-            ],
-          ),
+    return SingleChildScrollView(
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            _buildMealBoxStatusCard(),
+            const SizedBox(height: 16),
+            _buildNutritionalSummaryCard(),
+            const SizedBox(height: 16),
+            _buildDailyGoalProgressCard(),
+            const SizedBox(height: 16),
+            _buildRealTimeMonitoringCard(),
+          ],
         ),
       ),
     );
   }
-
 
   Widget _buildCard({
     required Widget child,
@@ -129,7 +91,10 @@ class _HomePageState extends State<HomePage> {
                   "0",
                   style: TextStyle(fontWeight: FontWeight.bold, fontSize: 40),
                 ),
-                Text("Remaining", style: TextStyle(color: Colors.grey)),
+                Text(
+                  "Remaining \n\t   Meals",
+                  style: TextStyle(color: Colors.grey),
+                ),
               ],
             ),
             progressColor: AppColors.primaryBlue,
@@ -364,58 +329,7 @@ class _HomePageState extends State<HomePage> {
       ),
     );
   }
-
-  Widget _buildUpcomingMealCard() {
-    return Container(
-      padding: const EdgeInsets.all(16.0),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16.0),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            "Upcoming Meal: Lunch",
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 4),
-          const Text("Ready To Start", style: TextStyle(color: Colors.grey)),
-          const SizedBox(height: 16),
-          const Center(
-            child: Text(
-              "Empty - Add food to begin!",
-              style: TextStyle(color: Colors.grey, fontSize: 16),
-            ),
-          ),
-          const SizedBox(height: 16),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton.icon(
-              onPressed: () {},
-              icon: const Icon(Icons.play_arrow, color: Colors.white),
-              label: const Text(
-                "Start Meal",
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primaryBlue,
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(50),
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 }
-
 
 class _NutrientInfo extends StatelessWidget {
   final IconData icon;

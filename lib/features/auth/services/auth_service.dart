@@ -2,6 +2,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class AuthService {
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   //signup with email
   Future<User?> signUpWithEmailAndPassword({
     required String email,
@@ -65,6 +67,16 @@ class AuthService {
     } catch (e) {
       print("An unexpected error occurred: $e");
       throw Exception('An unexpected error occurred.');
+    }
+  }
+
+  Future<void> signOut() async {
+    try {
+      await _auth.signOut();
+    } catch (e) {
+      print("Error signing out: $e");
+      // Optionally re-throw the exception to be handled in the UI
+      throw Exception('Could not sign out. Please try again.');
     }
   }
 }

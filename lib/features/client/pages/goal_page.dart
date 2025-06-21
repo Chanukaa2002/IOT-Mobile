@@ -20,52 +20,17 @@ class _GoalsPageState extends State<GoalsPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.grey[100],
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        leading: IconButton(
-          icon: Icon(Icons.menu, color: Colors.grey[800]),
-          onPressed: () {},
-        ),
-        title: Text(
-          'EATRO',
-          style: TextStyle(
-            color: Colors.grey[800],
-            fontWeight: FontWeight.bold,
-            letterSpacing: 1.2,
-          ),
-        ),
-        centerTitle: true,
-        actions: [
-          IconButton(
-            icon: Icon(Icons.notifications_outlined, color: Colors.grey[800]),
-            onPressed: () {},
-          ),
-          Padding(
-            padding: const EdgeInsets.only(right: 12.0),
-            child: CircleAvatar(
-              radius: 18,
-              backgroundImage: NetworkImage(
-                currentUser?.photoURL ?? 'https://i.pravatar.cc/150?img=3',
-              ),
-            ),
-          ),
-        ],
-      ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            children: [
-              _buildTopStatusCard(),
-              const SizedBox(height: 16),
-              _buildNutrientGrid(),
-              const SizedBox(height: 16),
-              _buildDailyGoalProgressCard(),
-            ],
-          ),
+    return SingleChildScrollView(
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            _buildTopStatusCard(),
+            const SizedBox(height: 16),
+            _buildNutrientGrid(),
+            const SizedBox(height: 16),
+            _buildDailyGoalProgressCard(),
+          ],
         ),
       ),
     );

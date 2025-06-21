@@ -72,72 +72,33 @@ class _HistoryPageState extends State<HistoryPage> {
       );
     }
 
-    return Scaffold(
-      backgroundColor: Colors.grey[100],
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0.5,
-        leading: IconButton(
-          icon: Icon(Icons.menu, color: Colors.grey[800]),
-          onPressed: () {},
-        ),
-        title: Text(
-          'Nutritional History',
-          style: TextStyle(
-            color: Colors.grey[800],
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        centerTitle: true,
-        actions: [
-          IconButton(
-            icon: Icon(Icons.notifications_outlined, color: Colors.grey[800]),
-            onPressed: () {},
-          ),
-          Padding(
-            padding: const EdgeInsets.only(right: 12.0),
-            child: CircleAvatar(
-              radius: 18,
-              backgroundImage:
-                  _user?.photoURL != null
-                      ? NetworkImage(_user!.photoURL!)
-                      : const NetworkImage('https://i.pravatar.cc/150?img=3')
-                          as ImageProvider,
-            ),
-          ),
-        ],
-      ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              StreamBuilder<double>(
-                stream: _firestoreService.getTotalCalorieStream(_userId!),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
-                  if (snapshot.hasError) {
-                    return Center(child: Text('Error: ${snapshot.error}'));
-                  }
-                  final totalCalories = snapshot.data ?? 0.0;
+    return SingleChildScrollView(
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            StreamBuilder<double>(
+              stream: _firestoreService.getTotalCalorieStream(_userId!),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                if (snapshot.hasError) {
+                  return Center(child: Text('Error: ${snapshot.error}'));
+                }
+                final totalCalories = snapshot.data ?? 0.0;
 
-                  return _buildTotalCaloriesCard(totalCalories);
-                },
-              ),
-              const SizedBox(height: 24),
-              WeightTrendCard(userId: _userId!),
-              const SizedBox(height: 16),
-              CalorieIntakeTrendCard(userId: _userId!),
-              const SizedBox(height: 16),
-              MacronutrientBreakdownCard(
-                userId: _userId!,
-                userGoals: _userGoals,
-              ),
-            ],
-          ),
+                return _buildTotalCaloriesCard(totalCalories);
+              },
+            ),
+            const SizedBox(height: 24),
+            WeightTrendCard(userId: _userId!),
+            const SizedBox(height: 16),
+            CalorieIntakeTrendCard(userId: _userId!),
+            const SizedBox(height: 16),
+            MacronutrientBreakdownCard(userId: _userId!, userGoals: _userGoals),
+          ],
         ),
       ),
     );
@@ -188,6 +149,7 @@ class _HistoryPageState extends State<HistoryPage> {
     );
   }
 }
+
 class WeightTrendCard extends StatefulWidget {
   final String userId;
   const WeightTrendCard({super.key, required this.userId});
@@ -655,11 +617,7 @@ Widget _getBarChartTitles(double value, TitleMeta meta) {
       text = const Text('', style: style);
       break;
   }
-  return SideTitleWidget(
-    space: 4, 
-    child: text,
-    meta: meta,
-  );
+  return SideTitleWidget(space: 4, child: text, meta: meta);
 }
 
 Widget _buildCircularStat({
