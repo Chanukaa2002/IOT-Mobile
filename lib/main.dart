@@ -3,13 +3,20 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:cw_app/features/client/service/notification_service.dart';
+import 'package:cw_app/features/client/service/temp_monitor_service.dart';
+
+
+
+final TemperatureMonitorService tempMonitorService = TemperatureMonitorService();
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   await dotenv.load(fileName: ".env");
-
+  await NotificationService().init();
+  tempMonitorService.startMonitoring();
   runApp(const MyApp());
 }
 
