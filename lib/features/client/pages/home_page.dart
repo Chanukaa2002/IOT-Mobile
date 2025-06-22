@@ -7,6 +7,7 @@ import 'package:cw_app/features/client/service/rtdb_service.dart';
 import 'package:cw_app/features/client/model/sensor_data.dart';
 import 'package:cw_app/features/client/service/firestore_service.dart';
 import 'package:cw_app/features/client/model/daily_summary.dart';
+import 'package:cw_app/features/client/pages/meal_box_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -75,70 +76,116 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildMealBoxStatusCard() {
+    if (currentUser == null) {
+      return _buildCard(
+        title: 'Meal Box Status',
+        icon: Icons.restaurant_menu_outlined,
+        child: const Center(child: Text("Please log in.")),
+      );
+    }
+
     return _buildCard(
       title: 'Meal Box Status',
       icon: Icons.restaurant_menu_outlined,
-      child: Column(
-        children: [
-          CircularPercentIndicator(
-            radius: 80.0,
-            lineWidth: 15.0,
-            percent: 0.7,
-            center: const Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  "0",
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 40),
+      // Wrap the content with a StreamBuilder to listen for the meal count
+      child: StreamBuilder<int>(
+        stream: _firestoreService.getTodaysMealCountStream(currentUser!.uid),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            // Show a simple loader while waiting for the first value
+            return const Center(child: CircularProgressIndicator());
+          }
+          if (snapshot.hasError) {
+            return Center(child: Text('Error: ${snapshot.error}'));
+          }
+
+          // Get the meal count from the stream, default to 0
+          final int mealCount = snapshot.data ?? 0;
+
+          // Assuming a goal of 3 meals per day (Breakfast, Lunch, Dinner)
+          final double progress = (mealCount / 3).clamp(0.0, 1.0);
+          final int remainingMeals = (3 - mealCount).clamp(0, 3);
+          final bool isEating = mealCount > 0 && mealCount < 3;
+
+          return Column(
+            children: [
+              CircularPercentIndicator(
+                radius: 80.0,
+                lineWidth: 15.0,
+                percent: progress, // Use the calculated progress
+                center: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      remainingMeals.toString(), // Show remaining meals
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 40,
+                      ),
+                    ),
+                    const Text(
+                      "Remaining \n\t   Meals",
+                      style: TextStyle(color: Colors.grey),
+                    ),
+                  ],
                 ),
-                Text(
-                  "Remaining \n\t   Meals",
-                  style: TextStyle(color: Colors.grey),
-                ),
-              ],
-            ),
-            progressColor: AppColors.primaryBlue,
-            backgroundColor: Colors.grey.shade200,
-            circularStrokeCap: CircularStrokeCap.round,
-          ),
-          const SizedBox(height: 16),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: Colors.red[100],
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Text(
-              "Eating in Progress",
-              style: TextStyle(
-                color: Colors.red[800],
-                fontWeight: FontWeight.w500,
+                progressColor: AppColors.primaryBlue,
+                backgroundColor: Colors.grey.shade200,
+                circularStrokeCap: CircularStrokeCap.round,
               ),
-            ),
-          ),
-          const SizedBox(height: 16),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton.icon(
-              onPressed: () {},
-              icon: const Icon(Icons.receipt_long, color: Colors.white),
-              label: const Text(
-                "Record Meal",
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
+              const SizedBox(height: 16),
+              // Show a status tag if eating is in progress
+              if (isEating)
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.green[100],
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    "$mealCount of 3 meals complete",
+                    style: TextStyle(
+                      color: Colors.green[800],
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    // Your navigation logic here
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const MealBoxPage(),
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.receipt_long, color: Colors.white),
+                  label: const Text(
+                    "Record Meal",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primaryBlue,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(50),
+                    ),
+                  ),
                 ),
               ),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primaryBlue,
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(50),
-                ),
-              ),
-            ),
-          ),
-        ],
+            ],
+          );
+        },
       ),
     );
   }

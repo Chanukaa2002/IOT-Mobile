@@ -134,4 +134,22 @@ class FirestoreService {
     });
     await batch.commit();
   }
+  Stream<int> getTodaysMealCountStream(String userId) {
+    final now = DateTime.now();
+    final startOfToday = DateTime(now.year, now.month, now.day);
+    final endOfToday = startOfToday.add(const Duration(days: 1));
+
+    final query = _firestore
+        .collection('users')
+        .doc(userId)
+        .collection('history')
+        .where('finishedAt', isGreaterThanOrEqualTo: startOfToday)
+        .where('finishedAt', isLessThan: endOfToday);
+
+    // Return a stream of the number of documents found
+    return query.snapshots().map((snapshot) {
+      return snapshot.docs.length;
+    });
+  }
+
 }

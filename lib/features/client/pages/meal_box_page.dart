@@ -123,16 +123,14 @@ class _MealBoxPageState extends State<MealBoxPage> {
         'carbs': analysisResult['total_carbs'],
         'fats': analysisResult['total_fats'],
         'protein': analysisResult['total_protein'],
-        'weight': _lastTotalWeight, 
-        'finishedAt':
-            DateTime.now(),
+        'weight': _lastTotalWeight,
+        'finishedAt': DateTime.now(),
       };
 
       await _firestoreService.saveMealHistory(userId, mealDataToSave);
 
       if (mounted) _showResultsDialog(analysisResult);
 
-      
       setState(() {
         _currentMealItems.clear();
         _lastTotalWeight = 0.0;
@@ -222,14 +220,14 @@ class _MealBoxPageState extends State<MealBoxPage> {
                 ),
               ),
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.brightBlue,
+                backgroundColor: AppColors.primaryBlue,
                 disabledBackgroundColor: Colors.grey.shade400,
                 padding: const EdgeInsets.symmetric(
                   horizontal: 32,
                   vertical: 14,
                 ),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(50),
                 ),
               ),
             ),
@@ -320,10 +318,10 @@ class _MealBoxPageState extends State<MealBoxPage> {
                   ),
                 ),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.brightBlue,
+                  backgroundColor: AppColors.primaryBlue,
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(50),
                   ),
                 ),
               ),

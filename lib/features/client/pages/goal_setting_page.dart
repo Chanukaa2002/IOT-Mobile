@@ -212,10 +212,10 @@ class _GoalSettingsPageState extends State<GoalSettingsPage> {
                         child: ElevatedButton(
                           onPressed: _isLoading ? null : _handleSaveGoals,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.brightBlue,
+                            backgroundColor: AppColors.primaryBlue,
                             padding: const EdgeInsets.symmetric(vertical: 16),
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(30),
+                              borderRadius: BorderRadius.circular(50),
                             ),
                           ),
                           child:
@@ -279,7 +279,7 @@ class _GoalSettingsPageState extends State<GoalSettingsPage> {
                   style: const TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.bold,
-                    color: AppColors.brightBlue,
+                    color: AppColors.primaryBlue,
                   ),
                 ),
                 Text(
@@ -312,7 +312,7 @@ class _GoalSettingsPageState extends State<GoalSettingsPage> {
                     onChanged:
                         (value) => setState(
                           () {},
-                        ), // Redraws the UI to update the value display above
+                        ),
                     decoration: InputDecoration(
                       contentPadding: const EdgeInsets.symmetric(vertical: 10),
                       border: OutlineInputBorder(

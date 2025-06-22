@@ -5,11 +5,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String title;
   final List<Widget>? actions;
 
-  const CustomAppBar({
-    super.key,
-    required this.title,
-    this.actions,
-  });
+  const CustomAppBar({super.key, required this.title, this.actions});
 
   @override
   Widget build(BuildContext context) {
@@ -33,12 +29,9 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
         ),
       ),
       centerTitle: true,
-      actions: actions ??
+      actions:
+          actions ??
           [
-            IconButton(
-              icon: Icon(Icons.notifications_outlined, color: Colors.grey[800]),
-              onPressed: () {},
-            ),
             Padding(
               padding: const EdgeInsets.only(right: 12.0),
               child: CircleAvatar(
