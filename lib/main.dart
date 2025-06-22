@@ -5,10 +5,12 @@ import 'firebase_options.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:cw_app/features/client/service/notification_service.dart';
 import 'package:cw_app/features/client/service/temp_monitor_service.dart';
+import 'package:cw_app/features/client/service/goal_monitor_service.dart';
 
 
 
 final TemperatureMonitorService tempMonitorService = TemperatureMonitorService();
+final GoalMonitorService goalMonitorService = GoalMonitorService();
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
