@@ -1,4 +1,5 @@
 import 'package:cw_app/features/auth/pages/login_page.dart';
+import 'package:cw_app/home.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
@@ -7,9 +8,8 @@ import 'package:cw_app/features/client/service/notification_service.dart';
 import 'package:cw_app/features/client/service/temp_monitor_service.dart';
 import 'package:cw_app/features/client/service/goal_monitor_service.dart';
 
-
-
-final TemperatureMonitorService tempMonitorService = TemperatureMonitorService();
+final TemperatureMonitorService tempMonitorService =
+    TemperatureMonitorService();
 final GoalMonitorService goalMonitorService = GoalMonitorService();
 
 Future<void> main() async {
@@ -27,9 +27,6 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: LoginPage(),
-    );
+    return const MaterialApp(debugShowCheckedModeBanner: false, home: Home());
   }
 }

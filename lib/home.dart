@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cw_app/core/utils/app_colors.dart'; // Make sure this import path is correct
+import 'package:cw_app/features/auth/pages/login_page.dart';
 
 class Home extends StatelessWidget {
   const Home({super.key});
@@ -80,10 +81,13 @@ class Home extends StatelessWidget {
             child: Padding(
               padding: const EdgeInsets.all(20.0),
               child: SizedBox(
-                width: double.infinity, // Make button span full width
+                width: double.infinity,
                 child: ElevatedButton(
                   onPressed: () {
-                    // TODO: Implement continue action
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(builder: (_) => const LoginPage()),
+                    );
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.white,
@@ -108,22 +112,17 @@ class Home extends StatelessWidget {
   }
 }
 
-// CustomClipper class to create the wave/curve shape
 class WaveClipper extends CustomClipper<Path> {
   @override
   Path getClip(Size size) {
-    // Defines the path for the custom curve
     var path = Path();
-    // Start from a point before the screen to create the curve effect
     path.moveTo(0, size.height * 0.4);
-    // Defines the curve using a quadratic Bezier curve
     path.quadraticBezierTo(
       size.width * 0.45,
       size.height * 0.60,
       size.width,
       size.height * 0.45,
     );
-    // Lines to the bottom corners to fill the rest of the screen
     path.lineTo(size.width, size.height);
     path.lineTo(0, size.height);
     path.close(); // Close the path to form a shape
@@ -132,7 +131,6 @@ class WaveClipper extends CustomClipper<Path> {
 
   @override
   bool shouldReclip(CustomClipper<Path> oldClipper) {
-    // Should not reclip, as the path is static
     return false;
   }
 }
