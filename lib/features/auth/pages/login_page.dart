@@ -5,6 +5,7 @@ import 'package:cw_app/core/utils/app_colors.dart';
 import 'package:cw_app/features/auth/services/auth_service.dart';
 import 'package:cw_app/features/client/widget/nav_widget.dart';
 import 'package:cw_app/features/auth/pages/signup_page.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -86,6 +87,41 @@ class _LoginPageState extends State<LoginPage> {
           const SnackBar(
             content: Text("Sign in failed. Please check your credentials."),
           ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  void _handleGoogleSignIn() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final user = await _authService.signInWithGoogle();
+
+      if (user != null && mounted) {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (context) => const NavWidget()),
+        );
+      }
+      // If user is null, it means they cancelled the process, so we do nothing.
+    } on FirebaseAuthException catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.message ?? "Google Sign-In Failed.")),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("An error occurred. Please try again.")),
         );
       }
     } finally {
@@ -220,7 +256,7 @@ class _LoginPageState extends State<LoginPage> {
 
               Center(
                 child: OutlinedButton(
-                  onPressed: () {},
+                  onPressed: _isLoading ? null : _handleGoogleSignIn,
                   style: OutlinedButton.styleFrom(
                     shape: const CircleBorder(),
                     padding: const EdgeInsets.all(16),
