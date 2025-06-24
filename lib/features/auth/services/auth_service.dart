@@ -6,6 +6,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final GoogleSignIn _googleSignIn = GoogleSignIn();
   //signup with email
   Future<User?> signUpWithEmailAndPassword({
     required String email,
@@ -74,36 +75,29 @@ class AuthService {
 
   Future<User?> signInWithGoogle() async {
     try {
-      // 1. Trigger the Google authentication flow
       final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
 
-      // If the user cancels the sign-in, return null
       if (googleUser == null) {
         return null;
       }
 
-      // 2. Obtain the auth details from the request
       final GoogleSignInAuthentication googleAuth =
           await googleUser.authentication;
 
-      // 3. Create a new credential for Firebase
       final AuthCredential credential = GoogleAuthProvider.credential(
         accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
       );
 
-      // 4. Sign in to Firebase with the credential
       final UserCredential userCredential = await _auth.signInWithCredential(
         credential,
       );
       final User? user = userCredential.user;
 
-      // 5. Check if this is a new user
       if (user != null) {
         final bool isNewUser =
             userCredential.additionalUserInfo?.isNewUser ?? false;
 
-        // If it's a new user, create a document in Firestore
         if (isNewUser) {
           await _firestore.collection('users').doc(user.uid).set({
             'uid': user.uid,
@@ -132,10 +126,10 @@ class AuthService {
       goalMonitorService.stopMonitoring();
       tempMonitorService.stopMonitoring();
 
+      await _googleSignIn.signOut();
       await _auth.signOut();
     } catch (e) {
       print("Error signing out: $e");
-      // Optionally re-throw the exception to be handled in the UI
       throw Exception('Could not sign out. Please try again.');
     }
   }

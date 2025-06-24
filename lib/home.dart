@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:cw_app/core/utils/app_colors.dart'; // Make sure this import path is correct
+import 'package:cw_app/core/utils/app_colors.dart';
 import 'package:cw_app/features/auth/pages/login_page.dart';
 
 class Home extends StatelessWidget {
@@ -125,7 +125,7 @@ class WaveClipper extends CustomClipper<Path> {
     );
     path.lineTo(size.width, size.height);
     path.lineTo(0, size.height);
-    path.close(); // Close the path to form a shape
+    path.close();
     return path;
   }
 

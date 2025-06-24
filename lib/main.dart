@@ -1,5 +1,4 @@
-import 'package:cw_app/features/auth/pages/login_page.dart';
-import 'package:cw_app/home.dart';
+import 'package:cw_app/features/auth/widget/auth_wrapper.dart'; // Import your new AuthWrapper
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
@@ -18,7 +17,7 @@ Future<void> main() async {
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   await dotenv.load(fileName: ".env");
   await NotificationService().init();
-  tempMonitorService.startMonitoring();
+
   runApp(const MyApp());
 }
 
@@ -27,6 +26,9 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(debugShowCheckedModeBanner: false, home: Home());
+    return const MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: AuthWrapper(),
+    );
   }
 }
