@@ -64,7 +64,7 @@ class _GoalsPageState extends State<GoalsPage> {
           builder: (context, summarySnapshot) {
             final latestWeight = summarySnapshot.data?.latestWeight ?? 0.0;
             final weightText =
-                latestWeight > 0 ? latestWeight.toStringAsFixed(0) : '--';
+                latestWeight > 0 ? latestWeight.toStringAsFixed(0) : '0';
             final progress =
                 weightGoal > 0
                     ? (latestWeight / weightGoal).clamp(0.0, 1.0)

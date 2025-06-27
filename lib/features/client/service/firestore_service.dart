@@ -5,6 +5,7 @@ import 'package:cw_app/core/utils/time_period.dart';
 class FirestoreService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
+  /// (FIXED) This stream now correctly calculates the TOTAL daily weight.
   Stream<DailySummary> getDailySummaryStream(String userId) {
     final now = DateTime.now();
     final startOfToday = DateTime(now.year, now.month, now.day);
@@ -15,37 +16,49 @@ class FirestoreService {
         .doc(userId)
         .collection('history')
         .where('finishedAt', isGreaterThanOrEqualTo: startOfToday)
-        .where('finishedAt', isLessThan: endOfToday)
-        .orderBy('finishedAt', descending: true);
+        .where('finishedAt', isLessThan: endOfToday);
+    // Note: orderBy is not needed here as we are summing all docs.
 
     return query.snapshots().map((snapshot) {
       if (snapshot.docs.isEmpty) {
+        // If there's no history for today, return an empty summary.
         return DailySummary();
       }
 
-      double totalCalories = 0, totalCarbs = 0, totalProtein = 0, totalFats = 0;
-      final latestMealData = snapshot.docs.first.data();
-      double latestWeight =
-          (latestMealData['weight'] as num?)?.toDouble() ?? 0.0;
+      // Initialize all totals to zero.
+      double totalCalories = 0,
+          totalCarbs = 0,
+          totalProtein = 0,
+          totalFats = 0,
+          totalWeight = 0; // The variable to hold the sum of weights.
 
+      // Loop through every meal document from today.
       for (var doc in snapshot.docs) {
         final data = doc.data();
+        // Sum up all values.
         totalCalories += (data['calories'] as num?) ?? 0;
         totalCarbs += (data['carbs'] as num?) ?? 0;
         totalProtein += (data['protein'] as num?) ?? 0;
         totalFats += (data['fats'] as num?) ?? 0;
+        // THE FIX: Sum the weight from each document.
+        totalWeight += (data['weight'] as num?)?.toDouble() ?? 0.0;
       }
 
+      // Return a summary object with the correct totals.
       return DailySummary(
         totalCalories: totalCalories,
         totalCarbs: totalCarbs,
         totalProtein: totalProtein,
         totalFats: totalFats,
-        latestWeight: latestWeight,
+        latestWeight: totalWeight, // Pass the total weight here.
       );
     });
   }
-   Future<void> saveMealHistory(String userId, Map<String, dynamic> mealData) async {
+
+  Future<void> saveMealHistory(
+    String userId,
+    Map<String, dynamic> mealData,
+  ) async {
     try {
       await _firestore
           .collection('users')
@@ -56,6 +69,7 @@ class FirestoreService {
       throw Exception('Error saving meal history: $e');
     }
   }
+
   Stream<double> getTotalCalorieStream(String userId) {
     return _firestore
         .collection('users')
@@ -134,6 +148,7 @@ class FirestoreService {
     });
     await batch.commit();
   }
+
   Stream<int> getTodaysMealCountStream(String userId) {
     final now = DateTime.now();
     final startOfToday = DateTime(now.year, now.month, now.day);
@@ -151,5 +166,4 @@ class FirestoreService {
       return snapshot.docs.length;
     });
   }
-
 }
