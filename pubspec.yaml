@@ -48,6 +48,7 @@ dependencies:
   google_generative_ai: ^0.4.7
   flutter_local_notifications: ^19.2.1
   google_sign_in: ^6.3.0
+  shimmer: ^3.0.0
 
 
 dev_dependencies:

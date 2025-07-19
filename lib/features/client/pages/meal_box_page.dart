@@ -6,7 +6,6 @@ import 'package:cw_app/features/client/service/rtdb_service.dart';
 import 'package:cw_app/features/client/service/nutrition_service.dart';
 import 'package:cw_app/features/client/service/firestore_service.dart';
 import 'package:cw_app/core/utils/app_colors.dart';
-import 'package:cw_app/features/client/model/sensor_data.dart';
 
 class MealBoxPage extends StatefulWidget {
   const MealBoxPage({super.key});
@@ -118,7 +117,6 @@ class _MealBoxPageState extends State<MealBoxPage>
             }
           },
           onError: (error) {
-            print("Error listening to container data: $error");
             if (mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
@@ -259,7 +257,6 @@ class _MealBoxPageState extends State<MealBoxPage>
     return Scaffold(
       backgroundColor: Colors.grey[100],
       appBar: AppBar(
-        title: const Text('Meal Box'),
         centerTitle: true,
         elevation: 0,
         backgroundColor: Colors.white,

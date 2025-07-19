@@ -6,6 +6,7 @@ import 'package:cw_app/core/utils/app_colors.dart';
 import 'package:cw_app/features/client/service/firestore_service.dart';
 import 'package:cw_app/features/client/pages/goal_setting_page.dart';
 import 'package:cw_app/features/client/model/daily_summary.dart';
+import 'package:cw_app/features/client/pages/food_recommendation_page.dart';
 
 class GoalsPage extends StatefulWidget {
   const GoalsPage({super.key});
@@ -18,6 +19,29 @@ class _GoalsPageState extends State<GoalsPage> {
   final FirestoreService _firestoreService = FirestoreService();
   final User? currentUser = FirebaseAuth.instance.currentUser;
 
+  void _navigateToRecommendations(Map<String, dynamic> userGoals) {
+    final goalsForRecommendation = {
+      'Carbohydrates':
+          (userGoals['carbohydrates']?['target'] ?? 0.0).toDouble(),
+      'Protein': (userGoals['proteins']?['target'] ?? 0.0).toDouble(),
+      'Fats': (userGoals['fats']?['target'] ?? 0.0).toDouble(),
+      'Calories': (userGoals['calories']?['target'] ?? 0.0).toDouble(),
+    };
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder:
+            (context) => FoodRecommendationPage(
+              userGoals: {
+                for (var key in goalsForRecommendation.keys)
+                  key: goalsForRecommendation[key]?.toDouble() ?? 0.0,
+              },
+            ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
@@ -29,7 +53,7 @@ class _GoalsPageState extends State<GoalsPage> {
             const SizedBox(height: 16),
             _buildNutrientGrid(),
             const SizedBox(height: 16),
-            _buildDailyGoalProgressCard(),
+            _buildActionCards(),
           ],
         ),
       ),
@@ -264,51 +288,79 @@ class _GoalsPageState extends State<GoalsPage> {
     );
   }
 
-  Widget _buildDailyGoalProgressCard() {
-    // This can be made dynamic later
-    return Container(
-      padding: const EdgeInsets.all(16.0),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16.0),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
+  Widget _buildActionCards() {
+    if (currentUser == null) return const SizedBox.shrink();
+
+    return StreamBuilder<QuerySnapshot>(
+      stream: _firestoreService.getGoalsStream(currentUser!.uid),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+          return const SizedBox.shrink();
+        }
+
+        final goals = {
+          for (var doc in snapshot.data!.docs) doc.id: doc.data() as Map,
+        };
+
+        return Container(
+          padding: const EdgeInsets.all(16.0),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16.0),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(Icons.track_changes_outlined, color: Colors.grey[800]),
-              const SizedBox(width: 8),
-              const Text(
-                "Daily Goal Progress",
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              Row(
+                children: [
+                  Icon(Icons.track_changes_outlined, color: Colors.grey[800]),
+                  const SizedBox(width: 8),
+                  const Text(
+                    "Actions",
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+              // NEW: The recommendation button is added here
+              ElevatedButton.icon(
+                onPressed: () => _navigateToRecommendations(goals),
+                icon: const Icon(Icons.lightbulb_outline, color: Colors.white),
+                label: const Text("Get Food Recommendations"),
+                style: ElevatedButton.styleFrom(
+                  minimumSize: const Size(double.infinity, 50),
+                  backgroundColor: AppColors.primaryBlue,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(50),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              OutlinedButton.icon(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const GoalSettingsPage(),
+                    ),
+                  );
+                },
+                icon: const Icon(Icons.settings_outlined),
+                label: const Text("Adjust Goals"),
+                style: OutlinedButton.styleFrom(
+                  minimumSize: const Size(double.infinity, 50),
+                  foregroundColor: Colors.grey[800],
+                  side: BorderSide(color: Colors.grey.shade300),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(50),
+                  ),
+                ),
               ),
             ],
           ),
-
-          const SizedBox(height: 20),
-          OutlinedButton.icon(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const GoalSettingsPage(),
-                ),
-              );
-            },
-            icon: const Icon(Icons.settings_outlined),
-            label: const Text("Adjust Goals"),
-            style: OutlinedButton.styleFrom(
-              minimumSize: const Size(double.infinity, 50),
-              foregroundColor: Colors.grey[800],
-              side: BorderSide(color: Colors.grey.shade300),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 }
@@ -381,27 +433,6 @@ class _NutrientCard extends StatelessWidget {
           ),
         ],
       ),
-    );
-  }
-}
-
-class _Legend extends StatelessWidget {
-  final Color color;
-  final String text;
-  const _Legend({required this.color, required this.text});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Container(
-          width: 12,
-          height: 12,
-          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-        ),
-        const SizedBox(width: 8),
-        Text(text, style: const TextStyle(color: Colors.grey)),
-      ],
     );
   }
 }
