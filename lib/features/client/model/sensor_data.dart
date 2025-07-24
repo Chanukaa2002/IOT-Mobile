@@ -4,7 +4,7 @@ class SensorData {
 
   SensorData({this.temperature = 0.0, this.liveWeight = 0.0});
 
-  // Updated to match your RTDB field names: 'temp' and 'weight'
+
   factory SensorData.fromMap(Map<dynamic, dynamic> map) {
     return SensorData(
       temperature: (map['temp'] as num?)?.toDouble() ?? 0.0,
