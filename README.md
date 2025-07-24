@@ -1,12 +1,27 @@
 # Smart Meal Box - Mobile Application
 
-![App Screenshot](https://via.placeholder.com/300x600?text=App+Preview) <!-- Replace with your app screenshots -->
+
+<table>
+  <tr>
+    <td><img src="repo-img/1.PNG" alt="Screen 1" width="100%"></td>
+    <td><img src="repo-img/2.PNG" alt="Screen 2" width="100%"></td>
+    <td><img src="repo-img/3.PNG" alt="Screen 3" width="100%"></td>
+    <td><img src="repo-img/4.PNG" alt="Screen 4" width="100%"></td>
+  </tr>
+  <tr>
+    <td><img src="repo-img/5.PNG" alt="Screen 5" width="100%"></td>
+    <td><img src="repo-img/6.PNG" alt="Screen 6" width="100%"></td>
+    <td><img src="repo-img/7.PNG" alt="Screen 7" width="100%"></td>
+    <td><img src="repo-img/8.PNG" alt="Screen 8" width="100%"></td>
+  </tr>
+</table>
 
 ## 📱 Mobile Application for IoT Smart Meal Box
 
 The companion mobile app for the Smart Meal Box system that visualizes dietary data, tracks nutrition goals, and provides real-time monitoring of food consumption.
 
 ## ✨ Key Features
+
 - **Real-time Dashboard**
   - Live weight measurements from meal box
   - Nutritional breakdown (calories, proteins, carbs, fats)
@@ -24,11 +39,11 @@ The companion mobile app for the Smart Meal Box system that visualizes dietary d
   - Meal reminders
 
 ## 🛠️ Technical Stack
-| Component | Technology |
-|-----------|------------|
-| Frontend | Flutter (Dart) |
-| Backend | Firebase/Firestore |
-| IoT Communication | MQTT/HTTP |
-| Charts Library | fl_chart |
-| State Management | Provider/Riverpod |
 
+| Component         | Technology         |
+| ----------------- | ------------------ |
+| Frontend          | Flutter (Dart)     |
+| Backend           | Firebase/Firestore |
+| IoT Communication | MQTT/HTTP          |
+| Charts Library    | fl_chart           |
+| State Management  | Provider/Riverpod  |
